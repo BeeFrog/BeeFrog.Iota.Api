@@ -6,11 +6,29 @@ It also can do the proof of work for you.
 http://iota.org
 https://github.com/iotaledger
 
+### Warning
+This library is not fully functional yet. Please only use to create zero value messages.
+
+Points to be aware of: 
+	Bundle finalizing will likely fail.
+	Transaction signing is untested at the moment.
+	Not all the unit tests are updated yet.
+	Code is not production ready and needs polishing.
+	TimeStamps will likely fail Daylight saving tests.	
+	
 ### Donate
 
 ```iota
 VKONPGYJLOB9TJVJTSAJBXWDSYSUUI9NWXZTQ9KGFSNXTQLCXTHFBCXRPCFKQFSJMCWMYEW9BAUXAMRYQSYV9FIRUP
 ```
+
+### TODO
+	Polish code.
+	Replace exceptions from API with a result object.
+	Remove strings for values. i.e. transaction value is a long.
+	Fix and test transaction signing + bundling.
+	Make the code DRY
+	Align the code more with SOLID principles.
 
 ### Technologies
 

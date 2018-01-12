@@ -17,9 +17,12 @@ namespace Borlay.Iota.Library.Models
         {
             TrunkTransaction = Constants.EmptyHash;
             BranchTransaction = Constants.EmptyHash;
-            Nonce = Constants.EmptyHash;
+            Nonce = Constants.EmptyTag;
             Tag = Constants.EmptyTag;
+            ObsoleteTag = Constants.EmptyTag;
+            ObsoleteTag = ObsoleteTag.Replace('9', 'A');
             SignatureFragment = Constants.EmptyHash;
+            Timestamp = Utils.IotaApiUtils.CreateTimeStampNow();
         }
 
         /// <summary>
@@ -79,14 +82,19 @@ namespace Borlay.Iota.Library.Models
             SignatureFragment = trytes.Substring(0, 2187);
             Address = trytes.Substring(2187, 2268 - 2187);
             Value = "" + Converter.ToLongValue(ArrayUtils.SubArray(transactionTrits, 6804, 6837));
-            Tag = trytes.Substring(2295, 2322 - 2295);
-            Timestamp = "" + Converter.ToLongValue(ArrayUtils.SubArray(transactionTrits, 6966, 6993));
-            CurrentIndex = "" + Converter.ToLongValue(ArrayUtils.SubArray(transactionTrits, 6993, 7020));
-            LastIndex = "" + Converter.ToLongValue(ArrayUtils.SubArray(transactionTrits, 7020, 7047));
+            ObsoleteTag = trytes.Substring(2295, 2322 - 2295);
+            Value = "" + Converter.ToLongValue(trytes, 2268, 2295);
+            Timestamp = Converter.ToLongValue(trytes, 2322, 2331);
+            CurrentIndex = "" + Converter.ToLongValue(trytes, 2331, 2340);
+            LastIndex = "" + Converter.ToLongValue(trytes, 2340, 2349);
             Bundle = trytes.Substring(2349, 2430 - 2349);
             TrunkTransaction = trytes.Substring(2430, 2511 - 2430);
             BranchTransaction = trytes.Substring(2511, 2592 - 2511);
-            Nonce = trytes.Substring(2592, 2673 - 2592);
+            Tag = trytes.Substring(2592, 2619 - 2592);
+            AttachmentTimestamp = Converter.ToLongValue(trytes, 2619, 2628);
+            AttachmentTimestampLowerBound = Converter.ToLongValue(trytes, 2628, 2637);
+            AttachmentTimestampUpperBound = Converter.ToLongValue(trytes, 2637, 2646);
+            Nonce = trytes.Substring(2646, 2673 - 2646);
         }
 
         /// <summary>
@@ -96,12 +104,12 @@ namespace Borlay.Iota.Library.Models
         /// <param name="value">The value.</param>
         /// <param name="tag">The tag.</param>
         /// <param name="timestamp">The timestamp.</param>
-        public TransactionItem(string address, string value, string tag, string timestamp)
+        public TransactionItem(string address, string value, string tag, DateTime? timestamp = null)
         {
             Address = address;
             Value = value;
             Tag = tag;
-            Timestamp = timestamp;
+            Timestamp = (long)((timestamp??DateTime.UtcNow) - new DateTime(1970,1,1)).TotalSeconds;
         }
 
         private string tag;
@@ -113,7 +121,6 @@ namespace Borlay.Iota.Library.Models
         private string type;
 
         private string bundle;
-        //private int index;
         private string trunkTransaction;
         private string branchTransaction;
         private string signatureFragment;
@@ -143,6 +150,11 @@ namespace Borlay.Iota.Library.Models
                 }
             }
         }
+
+        /// <summary>
+        /// The Obsolete tag which is no longer used.
+        /// </summary>
+        public string ObsoleteTag { get; private set; }
 
         /// <summary>
         /// Gets or sets the type.
@@ -260,21 +272,7 @@ namespace Borlay.Iota.Library.Models
         /// <value>
         /// The timestamp.
         /// </value>
-        public string Timestamp
-        {
-            get
-            {
-                return timestamp;
-            }
-            set
-            {
-                if (value != this.timestamp)
-                {
-                    this.timestamp = value;
-                    NotifyPropertyChanged();
-                }
-            }
-        }
+        public long Timestamp { get; private set; }
 
         /// <summary>
         /// Gets or sets the bundle.
@@ -297,28 +295,6 @@ namespace Borlay.Iota.Library.Models
                 }
             }
         }
-
-        ///// <summary>
-        ///// Gets or sets the index.
-        ///// </summary>
-        ///// <value>
-        ///// The index.
-        ///// </value>
-        //public int Index
-        //{
-        //    get
-        //    {
-        //        return index;
-        //    }
-        //    set
-        //    {
-        //        if (value != this.index)
-        //        {
-        //            this.index = value;
-        //            NotifyPropertyChanged();
-        //        }
-        //    }
-        //}
 
         /// <summary>
         /// Gets or sets the trunk transaction.
@@ -409,6 +385,21 @@ namespace Borlay.Iota.Library.Models
         }
 
         /// <summary>
+        /// Gets the time the transaction was attached to the tangle in milliseconds from the date 01/01/1970.
+        /// </summary>
+        public long AttachmentTimestamp { get; internal set; }
+
+        /// <summary>
+        /// Gets or sets the Attachment timestamp lower bound
+        /// </summary>
+        public long AttachmentTimestampLowerBound { get; private set; }
+
+        /// <summary>
+        /// Gets or sets the Attachment timestamp upper bound
+        /// </summary>
+        public long AttachmentTimestampUpperBound { get; private set; }
+
+        /// <summary>
         /// Gets or sets the index of the current.
         /// </summary>
         /// <value>
@@ -481,20 +472,29 @@ namespace Borlay.Iota.Library.Models
         public string ToTransactionTrytes()
         {
             int[] valueTrits = Converter.ToTrits(Value, 81);
-            int[] timestampTrits = Converter.ToTrits(Timestamp, 27);
+            int[] timestampTrits = Converter.ToTrits("" + Timestamp, 27);
             int[] currentIndexTrits = Converter.ToTrits(CurrentIndex, 27);
             int[] lastIndexTrits = Converter.ToTrits(LastIndex, 27);
+
+            if (this.AttachmentTimestamp <= 0)
+            {
+                AttachmentTimestamp = IotaApiUtils.CreateAttachmentTimeStampNow();
+            }
 
             return SignatureFragment
                    + Address
                    + Converter.ToTrytes(valueTrits)
-                   + Tag
+                   + ObsoleteTag
                    + Converter.ToTrytes(timestampTrits)
                    + Converter.ToTrytes(currentIndexTrits)
                    + Converter.ToTrytes(lastIndexTrits)
                    + Bundle
                    + TrunkTransaction
                    + BranchTransaction
+                   + Tag
+                   + Converter.ToTrytes(Converter.ToTrits("" + this.AttachmentTimestamp, 27)) // AttachmentTime
+                   + Converter.ToTrytes(Converter.ToTrits("0", 27)) // AttachmentLowerBound
+                   + Converter.ToTrytes(Converter.ToTrits("12", 27)) // AttachmentUpperBound
                    + Nonce;
         }
 
@@ -507,6 +507,20 @@ namespace Borlay.Iota.Library.Models
         public override string ToString()
         {
             return $"{nameof(Value)}: {Value}, {nameof(Persistence)}: {Value}, {nameof(Tag)}: {Tag}, {nameof(Hash)}: {Hash}, {nameof(Type)}: {Type}, {nameof(SignatureMessageChunk)}: {SignatureMessageChunk}, {nameof(Digest)}: {Digest}, {nameof(Address)}: {Address}, {nameof(Timestamp)}: {Timestamp}, {nameof(Bundle)}: {Bundle}, {nameof(TrunkTransaction)}: {TrunkTransaction}, {nameof(BranchTransaction)}: {BranchTransaction}, {nameof(SignatureFragment)}: {SignatureFragment}, {nameof(LastIndex)}: {LastIndex}, {nameof(CurrentIndex)}: {CurrentIndex}, {nameof(Nonce)}: {Nonce}";
+        }
+
+        /// <summary>
+        /// Sets the attachment time to the specified time.
+        /// </summary>
+        /// <param name="attachmentTime"></param>
+        public void SetAttachmentTime(DateTime attachmentTime)
+        {
+            this.AttachmentTimestamp = (long)(attachmentTime - new DateTime(1970, 1, 1)).TotalMilliseconds;
+        }
+
+        public void SetTimeStamp(DateTime attachmentTime)
+        {
+            this.Timestamp = (long)(attachmentTime - new DateTime(1970, 1, 1)).TotalSeconds;
         }
     }
 }

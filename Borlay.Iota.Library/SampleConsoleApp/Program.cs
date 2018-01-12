@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using Borlay.Iota.Library;
 using Borlay.Iota.Library.Models;
+using Borlay.Iota.Library.NodeLookup;
 
 namespace SampleConsoleApp
 {
@@ -17,13 +19,19 @@ namespace SampleConsoleApp
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Connecting to a Node!");
+            Console.WriteLine("Finding an IOTA node");
+            INodeFinder nodeFinder = new IotaDanceNodeFinder();
+//            var bestNodeUrl = nodeFinder.FindNodes().Result.First().Url;
+            var bestNodeUrl = "http://iotanode.party:14265";
+
+            Console.WriteLine($"Connecting to Node:{bestNodeUrl}");
 
             // !!Use a secure seed!! not this one!
             var seed = "CBM9PSNQPZVDXCHYJXDKUQITXAWQPBWZGYTBGTEIFWXOZTMHESEVHYLXWASWQFEJHUAKHIKSCA9AL9KMG";
 
-            var api = new IotaApi(Url, 14);
-
+            //var api = new IotaApi(bestNode.Url, 14);
+            var api = new IotaApi(bestNodeUrl, 14);
+            api.APIAction += Api_APIAction;
             var address1 = api.GetAddress(seed, 0).Result;
             Console.WriteLine("your first address:" + address1.Address);
 
@@ -42,11 +50,18 @@ namespace SampleConsoleApp
 
             var transactionItem = api.SendTransfer(transfer, CancellationToken.None).Result;
             Console.WriteLine($"You transaction took: {stopwatch.Elapsed.TotalSeconds} seconds.");
-            Console.WriteLine($"Your transaction hash (might be):  {transactionItem[0].Hash}");
+
+            // The hash is currently wrong at the moment.
+            Console.WriteLine($"Your transaction hash is:  {transactionItem[0].Hash}");
 
 
             Console.WriteLine($"Press any key to exit");
             Console.ReadKey();
-        }    
+        }
+
+        private static void Api_APIAction(object sender, string e)
+        {
+            Console.WriteLine(e);
+        }
     }
 }

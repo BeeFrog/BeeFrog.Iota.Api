@@ -17,7 +17,7 @@ namespace Borlay.Iota.Library.Utils
         /// </summary>
         public const int HashLength = 243;
         private static readonly int StateLength = 3 * HashLength;
-        private const int NumberOfRounds = 27;
+        private const int NumberOfRounds = 81;
         private static readonly int[] TruthTable = { 1, 0, -1, 1, -1, 0, -1, 1, 0 };
 
         private int[] state = new int[StateLength];

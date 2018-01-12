@@ -34,8 +34,6 @@ namespace Borlay.Iota.Library.Utils
         public const int RUNNING = 0;
         public const int CANCELLED = 1;
         public const int COMPLETED = 2;
-        
-        // The number of iterations of POW required
         private const int REQUIRED_ROUNDS = 81;
 
         public volatile int state;
@@ -110,6 +108,7 @@ namespace Borlay.Iota.Library.Utils
                 for (int i = (TRANSACTION_LENGTH - CURL_HASH_LENGTH) / CURL_HASH_LENGTH; i-- > 0;)
                 {
 
+                    
                     for (int j = 0; j < CURL_HASH_LENGTH; j++)
                     {
 
@@ -117,29 +116,16 @@ namespace Borlay.Iota.Library.Utils
                         {
 
                             case 0:
-                                {
-
-                                    midCurlStateLow[j] = HIGH_BITS;
-                                    midCurlStateHigh[j] = HIGH_BITS;
-
-                                }
+                                midCurlStateLow[j] = HIGH_BITS;
+                                midCurlStateHigh[j] = HIGH_BITS;
                                 break;
-
                             case 1:
-                                {
-
-                                    midCurlStateLow[j] = LOW_BITS;
-                                    midCurlStateHigh[j] = HIGH_BITS;
-
-                                }
+                                midCurlStateLow[j] = LOW_BITS;
+                                midCurlStateHigh[j] = HIGH_BITS;
                                 break;
-
                             default:
-                                {
-
-                                    midCurlStateLow[j] = HIGH_BITS;
-                                    midCurlStateHigh[j] = LOW_BITS;
-                                }
+                                midCurlStateLow[j] = HIGH_BITS;
+                                midCurlStateHigh[j] = LOW_BITS;
                                 break;
                         }
                     }
@@ -147,14 +133,35 @@ namespace Borlay.Iota.Library.Utils
                     transform(midCurlStateLow, midCurlStateHigh, curlScratchpadLow, curlScratchpadHigh);
                 }
 
-                midCurlStateLow[0] = LOW_0; // 0b1101101101101101101101101101101101101101101101101101101101101101L;
-                midCurlStateHigh[0] = HIGH_0; // 0b1011011011011011011011011011011011011011011011011011011011011011L;
-                midCurlStateLow[1] = LOW_1; // 0b1111000111111000111111000111111000111111000111111000111111000111L;
-                midCurlStateHigh[1] = HIGH_1; // 0b1000111111000111111000111111000111111000111111000111111000111111L;
-                midCurlStateLow[2] = LOW_2; // 0b0111111111111111111000000000111111111111111111000000000111111111L;
-                midCurlStateHigh[2] = HIGH_2; // 0b1111111111000000000111111111111111111000000000111111111111111111L;
-                midCurlStateLow[3] = LOW_3; // 0b1111111111000000000000000000000000000111111111111111111111111111L;
-                midCurlStateHigh[3] = HIGH_3; // 0b0000000000111111111111111111111111111111111111111111111111111111L;
+                // Added from java lib.
+                for (int i = 0; i < 162; i++)
+                {
+                    switch (transactionTrits[offset++])
+                    {
+                        case 0:
+                            midCurlStateLow[i] = 0b1111111111111111111111111111111111111111111111111111111111111111L;
+                            midCurlStateHigh[i] = 0b1111111111111111111111111111111111111111111111111111111111111111L;
+                            break;
+                        case 1:
+                            midCurlStateLow[i] = 0b0000000000000000000000000000000000000000000000000000000000000000L;
+                            midCurlStateHigh[i] = 0b1111111111111111111111111111111111111111111111111111111111111111L;
+                            break;
+                        default:
+                            midCurlStateLow[i] = 0b1111111111111111111111111111111111111111111111111111111111111111L;
+                            midCurlStateHigh[i] = 0b0000000000000000000000000000000000000000000000000000000000000000L;
+                            break;
+                    }
+                }
+
+
+                midCurlStateLow[162 + 0] = LOW_0; // 0b1101101101101101101101101101101101101101101101101101101101101101L;
+                midCurlStateHigh[162 + 0] = HIGH_0; // 0b1011011011011011011011011011011011011011011011011011011011011011L;
+                midCurlStateLow[162 + 1] = LOW_1; // 0b1111000111111000111111000111111000111111000111111000111111000111L;
+                midCurlStateHigh[162 + 1] = HIGH_1; // 0b1000111111000111111000111111000111111000111111000111111000111111L;
+                midCurlStateLow[162 + 2] = LOW_2; // 0b0111111111111111111000000000111111111111111111000000000111111111L;
+                midCurlStateHigh[162 + 2] = HIGH_2; // 0b1111111111000000000111111111111111111000000000111111111111111111L;
+                midCurlStateLow[162 + 3] = LOW_3; // 0b1111111111000000000000000000000000000111111111111111111111111111L;
+                midCurlStateHigh[162 + 3] = HIGH_3; // 0b0000000000111111111111111111111111111111111111111111111111111111L;
             }
 
             if (numberOfThreads <= 0)
@@ -180,7 +187,7 @@ namespace Borlay.Iota.Library.Utils
                     System.Array.Copy(midCurlStateHigh, 0, midCurlStateCopyHigh, 0, CURL_STATE_LENGTH);
                     for (int i = threadIndex; i-- > 0;)
                     {
-                        increment(midCurlStateCopyLow, midCurlStateCopyHigh, CURL_HASH_LENGTH / 3, (CURL_HASH_LENGTH / 3) * 2);
+                        increment(midCurlStateCopyLow, midCurlStateCopyHigh, 162 + CURL_HASH_LENGTH / 9, 162 + (CURL_HASH_LENGTH / 9) * 2);
                     }
 
                     ulong[] curlStateLow = new ulong[CURL_STATE_LENGTH], curlStateHigh = new ulong[CURL_STATE_LENGTH];
@@ -189,7 +196,7 @@ namespace Borlay.Iota.Library.Utils
                     while (state == RUNNING)
                     {
                         CancellationToken.ThrowIfCancellationRequested();
-                        increment(midCurlStateCopyLow, midCurlStateCopyHigh, (CURL_HASH_LENGTH / 3) * 2, CURL_HASH_LENGTH);
+                        increment(midCurlStateCopyLow, midCurlStateCopyHigh, 162 + (CURL_HASH_LENGTH / 9) * 2, CURL_HASH_LENGTH);
                         System.Array.Copy(midCurlStateCopyLow, 0, curlStateLow, 0, CURL_STATE_LENGTH);
                         System.Array.Copy(midCurlStateCopyHigh, 0, curlStateHigh, 0, CURL_STATE_LENGTH);
                         transform(curlStateLow, curlStateHigh, curlScratchpadLow, curlScratchpadHigh);
@@ -232,7 +239,7 @@ namespace Borlay.Iota.Library.Utils
         private static void transform(ulong[] curlStateLow, ulong[] curlStateHigh, ulong[] curlScratchpadLow, ulong[] curlScratchpadHigh)
         {
             int curlScratchpadIndex = 0;
-            for (int round = REQUIRED_ROUNDS; round-- > 0;)
+            for (int round = 0; round < REQUIRED_ROUNDS; round++)
             {
                 System.Array.Copy(curlStateLow, 0, curlScratchpadLow, 0, CURL_STATE_LENGTH);
                 System.Array.Copy(curlStateHigh, 0, curlScratchpadHigh, 0, CURL_STATE_LENGTH);

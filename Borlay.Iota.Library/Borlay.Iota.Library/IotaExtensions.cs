@@ -66,7 +66,6 @@ namespace Borlay.Iota.Library
 
         private static IEnumerable<TransactionItem> CreateDepositTransaction(TransferItem transferItem)
         {
-            var timestamp = IotaApiUtils.CreateTimeStampNow().ToString();
             var tag = transferItem.Tag.ValidateTrytes(nameof(transferItem.Tag)).Pad(27);
 
             var messages = ChunksUpto(transferItem.Message, 2187).ToArray();
@@ -79,7 +78,6 @@ namespace Borlay.Iota.Library
                     Address = transferItem.Address,
                     SignatureFragment = message,
                     Value = (i == 0 ? transferItem.Value : 0).ToString(),
-                    Timestamp = timestamp,
                     Tag = tag,
                 };
 
@@ -100,8 +98,6 @@ namespace Borlay.Iota.Library
                 if (addressItem.Balance <= 0)
                     continue;
 
-                var timestamp = IotaApiUtils.CreateTimeStampNow().ToString();
-
                 var amount = addressItem.Balance;
                 withdrawAmount -= amount;
 
@@ -109,7 +105,6 @@ namespace Borlay.Iota.Library
                 {
                     Address = addressItem.Address,
                     Value = (-amount).ToString(), // withdraw all amount
-                    Timestamp = timestamp,
                     Tag = tag
                 };
                 yield return transactionItem;
@@ -118,7 +113,6 @@ namespace Borlay.Iota.Library
                 {
                     Address = addressItem.Address,
                     Value = "0",
-                    Timestamp = timestamp,
                     Tag = tag
                 };
                 yield return transactionItem;
@@ -133,7 +127,6 @@ namespace Borlay.Iota.Library
                     {
                         Address = reminderAddress,
                         Value = Math.Abs(withdrawAmount).ToString(),
-                        Timestamp = timestamp,
                         SignatureFragment = message,
                         Tag = tag
                     };
@@ -249,7 +242,8 @@ namespace Borlay.Iota.Library
             var trytesConstruct = trytes.Substring(0, 2430);
             trytesConstruct += trunkTransaction;
             trytesConstruct += branchTransaction;
-            trytesConstruct += EmptyHash();
+
+            trytesConstruct += trytes.Substring(2592, trytes.Length - 2592);
 
             return trytesConstruct;
         }
@@ -260,7 +254,7 @@ namespace Borlay.Iota.Library
             var trytesConstruct = trytes.Substring(0, 2430);
             trytesConstruct += trunkTransaction;
             trytesConstruct += branchTransaction;
-            trytesConstruct += EmptyHash();
+            trytesConstruct += trytes.Substring(2592, trytes.Length - 2592);
 
             return trytesConstruct;
         }
@@ -269,7 +263,20 @@ namespace Borlay.Iota.Library
         {
             var trytesConstruct = trytes.Substring(0, 2430 + 81);
             trytesConstruct += branchTransaction;
-            trytesConstruct += EmptyHash();
+            trytesConstruct += trytes.Substring(2592, trytes.Length - 2592);            
+
+            return trytesConstruct;
+        }
+
+        public static string SetTag(this string trytes, string tag)
+        {
+            if(trytes.Length < 2619) throw new InvalidTryteException("Tryte length too small.");
+            
+            var tagToSet = tag.ValidateTrytes(nameof(tag)).Pad(27);
+
+            var trytesConstruct = trytes.Substring(0, 2592);
+            trytesConstruct += tagToSet;
+            trytesConstruct += trytes.Substring(2619, trytes.Length - 2619);
 
             return trytesConstruct;
         }
@@ -286,8 +293,7 @@ namespace Borlay.Iota.Library
 
         public static string EmptyHash(int length = 81)
         {
-            var emptyHash = new string(Enumerable.Repeat('9', 81).ToArray());
-            return emptyHash;
+            return new string('9', length);
         }
     }
 }

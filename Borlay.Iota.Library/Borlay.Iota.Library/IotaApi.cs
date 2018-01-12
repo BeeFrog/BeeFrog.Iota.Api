@@ -42,6 +42,13 @@ namespace Borlay.Iota.Library
         public IriApi IriApi => iriApi;
 
         /// <summary>
+        /// Triggers when any messages from the API are called.
+        /// </summary>
+        public event EventHandler<string> APIAction;
+
+        private void RaiseAPIAction(string message) => APIAction?.Invoke(this, message);
+
+        /// <summary>
         /// Gets the Url
         /// </summary>
         public string Url => iriApi.WebClient.Url;
@@ -431,17 +438,19 @@ namespace Borlay.Iota.Library
             if (NonceSeeker == null)
                 throw new NullReferenceException(nameof(NonceSeeker));
 
+            RaiseAPIAction("Getting Transactions");
             var toApprove = await IriApi.GetTransactionsToApprove(Depth);
 
             var trunk = toApprove.TrunkTransaction;
             var branch = toApprove.BranchTransaction;
 
+            RaiseAPIAction("Performing POW");
             var trytesToSend = await NonceSeeker.SearchNonce(transactionTrytes, trunk, branch, cancellationToken);
 
-            //var trytesToSend = await transactionTrytes
-            //    .DoPow(trunk, branch, IriApi.MinWeightMagnitude, NumberOfThreads, cancellationToken);
-
+            RaiseAPIAction("Broadcasting transaction");
             await BroadcastAndStore(trytesToSend);
+
+            RaiseAPIAction("Transaction Sent.");
             return trytesToSend;
         }
 

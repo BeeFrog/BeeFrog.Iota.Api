@@ -19,7 +19,7 @@ namespace Borlay.Iota.Library.Models
 
                 int[] valueTrits = Converter.ToTrits(transaction.Value, 81);
 
-                int[] timestampTrits = Converter.ToTrits(transaction.Timestamp, 27);
+                int[] timestampTrits = Converter.ToTrits(""+transaction.Timestamp, 27);
 
                 int[] currentIndexTrits = Converter.ToTrits(transaction.CurrentIndex = ("" + i), 27);
 

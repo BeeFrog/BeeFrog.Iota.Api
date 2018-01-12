@@ -338,6 +338,25 @@ namespace Borlay.Iota.Library.Utils
         }
 
         /// <summary>
+        /// Converts a raw trytes value into the long value.
+        /// </summary>
+        /// <param name="trytes">The trytes to use</param>
+        /// <param name="startOffset">Where within the given trytes stringthe value starts</param>
+        /// <param name="endOffset">Where within the given trytes stringthe value ends</param>
+        /// <returns></returns>
+        public static long ToLongValue(string trytes, int startOffset, int endOffset)
+        {
+            var tryteValue = trytes.Substring(startOffset, endOffset - startOffset);
+            if (tryteValue == new string('9', tryteValue.Length))
+            {
+                return 0;
+            }
+
+            var trites = Converter.ToTrits(tryteValue);
+            return Converter.ToLongValue(trites);
+        }
+
+        /// <summary>
         /// Increments the specified trits.
         /// </summary>
         /// <param name="trits">The trits.</param>
