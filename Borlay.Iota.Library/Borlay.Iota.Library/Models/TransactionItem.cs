@@ -22,7 +22,7 @@ namespace Borlay.Iota.Library.Models
             ObsoleteTag = Constants.EmptyTag;
             ObsoleteTag = ObsoleteTag.Replace('9', 'A');
             SignatureFragment = Constants.EmptyHash;
-            Timestamp = Utils.IotaApiUtils.CreateTimeStampNow();
+            Timestamp = Utils.IotaUtils.CreateTimeStampNow();
         }
 
         /// <summary>
@@ -478,7 +478,7 @@ namespace Borlay.Iota.Library.Models
 
             if (this.AttachmentTimestamp <= 0)
             {
-                AttachmentTimestamp = IotaApiUtils.CreateAttachmentTimeStampNow();
+                AttachmentTimestamp = IotaUtils.CreateAttachmentTimeStampNow();
             }
 
             return SignatureFragment

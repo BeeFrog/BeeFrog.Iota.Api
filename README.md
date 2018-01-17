@@ -1,3 +1,9 @@
+
+# Attention
+
+For now this library is not working. IOTA changed encryption (Curl) and theses changes in this library are not implemented yet.
+
+
 ## Introduction
 
 The Borlay.Iota.Library implements [[IOTA IRI api calls]](https://github.com/iotaledger/wiki/blob/master/api-proposal.md).
@@ -19,7 +25,7 @@ Points to be aware of:
 ### Donate
 
 ```iota
-VKONPGYJLOB9TJVJTSAJBXWDSYSUUI9NWXZTQ9KGFSNXTQLCXTHFBCXRPCFKQFSJMCWMYEW9BAUXAMRYQSYV9FIRUP
+PJGEZFOH99UVRUTRNWPZIYHHKWBMQKG9BHCMJGOZWWSPEWLTJYOHEFSJFQJHDBVOXLHMJATJIALSXELYXRBGAMWZHW
 ```
 
 ### TODO
