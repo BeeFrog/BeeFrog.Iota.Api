@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Borlay.Iota.Library.Utils;
 
 namespace Borlay.Iota.Library.Crypto
 {

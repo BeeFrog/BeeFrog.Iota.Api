@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using Borlay.Iota.Library;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Borlay.Iota.Library.Crypto;
 
 namespace Borlay.Iota.Library.Tests
 {
@@ -103,6 +104,34 @@ namespace Borlay.Iota.Library.Tests
             // Assert.AreEqual("9BHGQLNJGFONXXJLSNEZXACIP9UQGV9HIWKP9X9COQLHBRSWEBSBJECCLLADKBUW9HAKSQZBNJZVIQAHZ", tran.Bundle);            
             // Assert.AreEqual("UIZGIWQZHBKTDRERGFGMSXC9XMU", tran.Nonce);
             // Assert.AreEqual("EQK9ZETZMFMB9VMIEYEXKTAEMZBGQSDSAMCWXKZVVQXKZBUPGCJ9RRQLMWTEKLBWKNERC9ZMIROXZ9999", tran.Hash);
+        }
+
+        [TestMethod]
+        public void Transaction_CanSign_WithoutError()
+        {
+            var seed = "GFZIP9ZXJIJLUBYGTY9LGEDXVBLRCBEOEWYGZKHDLCCGXOVFPZM9MLQRMATDIICUFZRNXDNOBQIBA9999";
+            var address1 = Utils.IotaUtils.GenerateAddress(seed, 0);
+            var address2 = Utils.IotaUtils.GenerateAddress(seed, 1);
+            var pKey = Utils.Converter.ToTrytes(address1.PrivateKeyTrints);
+
+            var signing = new Utils.Signing2(new Kerl());            
+            var key1 = signing.key(Utils.Converter.ToTrits(seed), 0, 2);
+
+            var address1again = Utils.IotaUtils.GenerateAddress(key1, false, CancellationToken.None);
+            Assert.AreEqual(address1.Address, address1again);
+
+            address1.Balance = 1;
+
+            var trunk = "GFZIP9ZXJIJLUBYGTY9LGEDXVBLRCBEOEWYGZKHDLCCGXOVFPZM9MLQRMATDIICUFZRNXDNOBQIBA9999";
+            var branch = "NYXCW9DAGWKXQXUL9OUIIJYJFDOBLEB9LGTNWMCNADXPJVGECZ9SKVRTOXSNNXRHPP9QMCXSWRLU99999";
+
+            var transfer = new TransferItem() { Address = address2.Address, Message = "TESTMESSAGE", Tag = "MINEIOTADOTCOM", Value = 1 };
+
+            // Act
+            var trans = transfer.CreateTransactions(address1.Address, address1);
+
+            // Assert
+
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Borlay.Iota.Library.Models;
+﻿using Borlay.Iota.Library.Crypto;
+using Borlay.Iota.Library.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,6 +15,11 @@ namespace Borlay.Iota.Library.Utils
     public class Signing
     {
         private ICurl curl;
+
+        private const int HASH_LENGTH = 243;
+        private int STATE_LENGTH = 3 * HASH_LENGTH;
+        private const int NUMBER_OF_ROUNDS = 27;
+
 
         public Signing(ICurl curl)
         {
@@ -31,7 +37,7 @@ namespace Borlay.Iota.Library.Utils
 
             for (int i = 0; i < index; i++)
             {
-                for (int j = 0; j < 243; j++)
+                for (int j = 0; j < HASH_LENGTH; j++)
                 {
                     if (++subseed[j] > 1)
                     {
@@ -56,10 +62,10 @@ namespace Borlay.Iota.Library.Utils
 
             while (length-- > 0)
             {
-                for (int i = 0; i < 27; i++)
+                for (int i = 0; i < NUMBER_OF_ROUNDS; i++)
                 {
                     curl.Squeeze(buffer, offset, buffer.Length);
-                    for (int j = 0; j < 243; j++)
+                    for (int j = 0; j < HASH_LENGTH; j++)
                     {
                         key.Add(buffer[j]);
                     }
@@ -81,27 +87,27 @@ namespace Borlay.Iota.Library.Utils
 
         public int[] Digests(int[] key)
         {
-            int[] digests = new int[(int)Math.Floor((decimal)key.Length / 6561) * 243];
-            int[] buffer = new int[243];
+            int[] digests = new int[(int)Math.Floor((decimal)key.Length / 6561) * HASH_LENGTH];
+            int[] buffer = new int[HASH_LENGTH];
             
             for (int i = 0; i < Math.Floor((decimal)key.Length / 6561); i++)
             {
                 int[] keyFragment = new int[6561];
                 Array.Copy(key, i * 6561, keyFragment, 0, 6561);
 
-                for (int j = 0; j < 27; j++)
+                for (int j = 0; j < NUMBER_OF_ROUNDS; j++)
                 {
                     
-                    Array.Copy(keyFragment, j * 243, buffer, 0, 243);
+                    Array.Copy(keyFragment, j * HASH_LENGTH, buffer, 0, HASH_LENGTH);
                     for (int k = 0; k < 26; k++)
                     {
                         curl.Reset();
                         curl.Absorb(buffer, 0, buffer.Length);
                         curl.Squeeze(buffer, 0, buffer.Length);
                     }
-                    for (int k = 0; k < 243; k++)
+                    for (int k = 0; k < HASH_LENGTH; k++)
                     {
-                        keyFragment[j * 243 + k] = buffer[k];
+                        keyFragment[j * HASH_LENGTH + k] = buffer[k];
                     }
                 }
 
@@ -109,9 +115,9 @@ namespace Borlay.Iota.Library.Utils
                 curl.Absorb(keyFragment, 0, keyFragment.Length);
                 curl.Squeeze(buffer, 0, buffer.Length);
 
-                for (int j = 0; j < 243; j++)
+                for (int j = 0; j < HASH_LENGTH; j++)
                 {
-                    digests[i * 243 + j] = buffer[j];
+                    digests[i * HASH_LENGTH + j] = buffer[j];
                 }
             }
             
@@ -121,11 +127,11 @@ namespace Borlay.Iota.Library.Utils
         public int[] Digest(int[] normalizedBundleFragment, int[] signatureFragment)
         {
             curl.Reset();
-            int[] buffer = new int[243];
+            int[] buffer = new int[HASH_LENGTH];
 
-            for (int i = 0; i < 27; i++)
+            for (int i = 0; i < NUMBER_OF_ROUNDS; i++)
             {
-                buffer = ArrayUtils.SubArray(signatureFragment, i * 243, 243);
+                buffer = ArrayUtils.SubArray(signatureFragment, i * HASH_LENGTH, HASH_LENGTH);
                 ;
                 ICurl jCurl = curl.Clone();
 
@@ -144,18 +150,20 @@ namespace Borlay.Iota.Library.Utils
 
         public int[] Address(int[] digests)
         {
-            int[] address = new int[243];
-            curl.Reset().Absorb(digests, 0, digests.Length).Squeeze(address, 0, address.Length);
+            int[] address = new int[HASH_LENGTH];
+            curl.Reset()
+                .Absorb(digests, 0, digests.Length)
+                .Squeeze(address, 0, address.Length);
             return address;
         }
 
         public int[] SignatureFragment(int[] normalizedBundleFragment, int[] keyFragment)
         {
-            int[] hash = new int[243];
+            int[] hash = new int[HASH_LENGTH];
 
-            for (int i = 0; i < 27; i++)
+            for (int i = 0; i < NUMBER_OF_ROUNDS; i++)
             {
-                Array.Copy(keyFragment, i * 243, hash, 0, 243);
+                Array.Copy(keyFragment, i * HASH_LENGTH, hash, 0, HASH_LENGTH);
 
                 for (int j = 0; j < 13 - normalizedBundleFragment[i]; j++)
                 {
@@ -164,9 +172,9 @@ namespace Borlay.Iota.Library.Utils
                         .Squeeze(hash, 0, hash.Length);
                 }
 
-                for (int j = 0; j < 243; j++)
+                for (int j = 0; j < HASH_LENGTH; j++)
                 {
-                    Array.Copy(hash, j, keyFragment, i * 243 + j, 1);
+                    Array.Copy(hash, j, keyFragment, i * HASH_LENGTH + j, 1);
                 }
             }
 
@@ -177,27 +185,27 @@ namespace Borlay.Iota.Library.Utils
         {
             //Bundle bundle = new Bundle();
 
-            var normalizedBundleFragments = new int[3, 27];
+            var normalizedBundleFragments = new int[3, NUMBER_OF_ROUNDS];
             int[] normalizedBundleHash = TransactionExtensions.NormalizedBundle(bundleHash); //bundle.NormalizedBundle(bundleHash);
 
             // Split hash into 3 fragments
             for (int i = 0; i < 3; i++)
             {
-                // normalizedBundleFragments[i] = Arrays.copyOfRange(normalizedBundleHash, i*27, (i + 1)*27);
-                Array.Copy(normalizedBundleHash, i * 27, normalizedBundleFragments, 0, 27);
+                // normalizedBundleFragments[i] = Arrays.copyOfRange(normalizedBundleHash, i*NUMBER_OF_ROUNDS, (i + 1)*NUMBER_OF_ROUNDS);
+                Array.Copy(normalizedBundleHash, i * NUMBER_OF_ROUNDS, normalizedBundleFragments, 0, NUMBER_OF_ROUNDS);
             }
 
             // Get digests
-            int[] digests = new int[signatureFragments.Length * 243];
+            int[] digests = new int[signatureFragments.Length * HASH_LENGTH];
 
             for (int i = 0; i < signatureFragments.Length; i++)
             {
                 int[] digestBuffer = Digest(ArrayUtils.SliceRow(normalizedBundleFragments, i % 3).ToArray(),
                     Converter.ToTrits(signatureFragments[i]));
 
-                for (int j = 0; j < 243; j++)
+                for (int j = 0; j < HASH_LENGTH; j++)
                 {
-                    Array.Copy(digestBuffer, j, digests, i * 243 + j, 1);
+                    Array.Copy(digestBuffer, j, digests, i * HASH_LENGTH + j, 1);
                 }
             }
             string address = Converter.ToTrytes(Address(digests));

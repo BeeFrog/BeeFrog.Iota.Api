@@ -17,28 +17,11 @@ namespace Borlay.Iota.Library.Iri.Dto
         public FindTransactionsRequest(string[] bundles, string[] addresses, string[] tags,
             string[] approvees) : base(CommandConstants.FindTransactions)
         {
-            Bundles = bundles;
-            Addresses = addresses;
-            Tags = tags;
-            Approvees = approvees;
-
-            if (Bundles == null)
-                Bundles = new string[] { };
-            if (Addresses == null)
-                Addresses = new string[] { };
-            if (Tags == null)
-                Tags = new string[] { };
-            if (Approvees == null)
-                Approvees = new string[] { };
+            this.Bundles = bundles;
+            this.Addresses = addresses;
+            this.Tags = tags;
+            this.Approvees = approvees;
         }
-
-        /// <summary>
-        /// Gets or sets the bundles.
-        /// </summary>
-        /// <value>
-        /// The bundles.
-        /// </value>
-        public string[] Bundles { get; set; }
 
         /// <summary>
         /// Gets or sets the addresses.
@@ -47,6 +30,14 @@ namespace Borlay.Iota.Library.Iri.Dto
         /// The addresses.
         /// </value>
         public string[] Addresses { get; set; }
+
+        /// <summary>
+        /// Gets or sets the bundles.
+        /// </summary>
+        /// <value>
+        /// The bundles.
+        /// </value>
+        public string[] Bundles { get; set; }
 
         /// <summary>
         /// Gets or sets the tags.

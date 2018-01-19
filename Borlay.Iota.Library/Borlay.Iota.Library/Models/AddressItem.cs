@@ -54,6 +54,27 @@ namespace Borlay.Iota.Library.Models
         }
 
         /// <summary>
+        /// Returns the private key as Trints
+        /// This may not work!
+        /// </summary>
+        public int[] PrivateKeyTrints
+        {
+            get
+            {
+                var trytes = Utils.Converter.GetTrytes(this.PrivateKey);
+                var response = Utils.Converter.ToTrits(trytes);
+                return response;
+
+                //var trints = new int[4374];
+                //Utils.Converter.GetTrits(this.PrivateKey, trints);
+                //return trints;
+                //  var unsignedBytes = (byte[])(Array)this.PrivateKey;
+                // var trints = Crypto.Kerl.ConvertToInt32Array(unsignedBytes);
+                //return trints;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the balance.
         /// </summary>
         /// <value>

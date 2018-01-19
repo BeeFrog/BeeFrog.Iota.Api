@@ -44,8 +44,7 @@ namespace Borlay.Iota.Library.Iri
             this.TransactionApproveDepth = 9;
         }
 
-        public async Task<string[]> AttachToTangle(
-            string[] trytes, CancellationToken cancellationToken)
+        public async Task<string[]> AttachToTangle(string[] trytes, CancellationToken cancellationToken)
         {
             var transactionsToApprove = await GetTransactionsToApprove(TransactionApproveDepth);
             return await AttachToTangle(trytes,
@@ -53,8 +52,8 @@ namespace Borlay.Iota.Library.Iri
                 cancellationToken);
         }
 
-            public async Task<string[]> AttachToTangle(string[] trytes, 
-                string trunkTransaction, string branchTransaction, CancellationToken cancellationToken)
+        public async Task<string[]> AttachToTangle(string[] trytes, 
+            string trunkTransaction, string branchTransaction, CancellationToken cancellationToken)
         {
             InputValidator.CheckIfArrayOfTrytes(trytes);
 
@@ -78,8 +77,8 @@ namespace Borlay.Iota.Library.Iri
             IEnumerable<string> approves, IEnumerable<string> bundles)
         {
             FindTransactionsRequest findTransactionsRequest = 
-                new FindTransactionsRequest(bundles?.ToArray(), addresses?.ToArray(), 
-                                            tags?.ToArray(), approves?.ToArray());
+                new FindTransactionsRequest(bundles?.ToArray(), addresses?.ToArray(), tags?.ToArray(), approves?.ToArray());
+
             var response = await genericClient.RequestAsync<FindTransactionsResponse>(findTransactionsRequest);
             if (response == null)
                 throw new NullReferenceException(nameof(response));

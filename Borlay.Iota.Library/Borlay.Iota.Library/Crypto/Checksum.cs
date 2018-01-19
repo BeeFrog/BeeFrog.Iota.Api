@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Borlay.Iota.Library.Utils;
 
 namespace Borlay.Iota.Library.Crypto
 {
@@ -15,13 +16,13 @@ namespace Borlay.Iota.Library.Crypto
             var addressTrits = Converter.GetTrits(inputValue);
 
             // Checksum trits
-            var checksumTrits = new sbyte[Curl.HASH_LENGTH];
+            var checksumTrits = new sbyte[Curl.HashLength];
 
             // Absorb address trits
             kerl.Absorb(addressTrits, 0, addressTrits.Length);
 
             // Squeeze checksum trits
-            kerl.Squeeze(checksumTrits, 0, Curl.HASH_LENGTH);
+            kerl.Squeeze(checksumTrits, 0, Curl.HashLength);
 
             // First 9 trytes as checksum
             var checksum = Converter.GetTrytes(checksumTrits).Substring(81 - checksumLength, checksumLength);
@@ -81,7 +82,7 @@ var checksumTrits = [];
 kerl.absorb(addressTrits, 0, addressTrits.length);
 
         // Squeeze checksum trits
-        kerl.squeeze(checksumTrits, 0, Curl.HASH_LENGTH);
+        kerl.squeeze(checksumTrits, 0, Curl.HashLength);
 
         // First 9 trytes as checksum
         var checksum = Converter.trytes(checksumTrits).substring(81 - checksumLength, 81);

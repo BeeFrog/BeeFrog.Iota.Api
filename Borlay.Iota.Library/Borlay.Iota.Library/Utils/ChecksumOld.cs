@@ -69,7 +69,7 @@ namespace Borlay.Iota.Library.Utils
         private static string CalculateChecksum(string address)
         {
             // TODO inject curl
-            Curl curl = new Curl();
+            var curl = new Crypto.Curl();
             curl.Reset();
             curl.State = Converter.CopyTrits(address, curl.State);
             curl.Transform();

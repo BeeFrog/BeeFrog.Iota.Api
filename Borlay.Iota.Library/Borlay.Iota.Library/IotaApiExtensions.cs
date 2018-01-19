@@ -90,7 +90,7 @@ namespace Borlay.Iota.Library
             if (string.IsNullOrWhiteSpace(reminderAddress))
                 throw new ArgumentNullException(nameof(reminderAddress));
 
-            var curl = new Curl();
+            var curl = new Crypto.Curl();
             tag = tag.ValidateTrytes(nameof(tag)).Pad(27);
 
             foreach (var addressItem in addressItems)
@@ -170,7 +170,7 @@ namespace Borlay.Iota.Library
             if (withdrawalTransactions != null)
                 transactions.AddRange(withdrawalTransactions);
 
-            var bundleHash = transactions.FinalizeAndNormalizeBundleHash(new Curl());
+            var bundleHash = transactions.FinalizeAndNormalizeBundleHash(new Crypto.Curl());
 
             if (withdrawalTransactions != null)
             {

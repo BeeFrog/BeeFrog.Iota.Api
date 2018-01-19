@@ -21,6 +21,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Utils\Curl.cs" />
+    <Compile Remove="Utils\ICurl.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
   </ItemGroup>
 

@@ -47,7 +47,7 @@ namespace Borlay.Iota.Library.Utils
         /// <returns></returns>
         public static AddressItem GenerateAddress(string seed, int index, int security, CancellationToken cancellationToken)
         {
-            var trits = Crypto.Converter.GetTrits(seed);
+            var trits = Converter.GetTrits(seed);            
             sbyte[] key = new Crypto.Signing().Key(trits, index, security);
             string address = GenerateAddress(key, false, cancellationToken);
 
@@ -61,6 +61,33 @@ namespace Borlay.Iota.Library.Utils
 
             return addressItem;
         }
+
+        /// <summary>
+        /// Offline generates an address
+        /// </summary>
+        /// <param name="seed">The seed from which an address should be generated</param>
+        /// <param name="index">The index of the address</param>
+        /// <param name="security">Security level (1, 2, 3). Use 2 if you don't know what to use.</param>
+        /// <param name="cancellationToken">The CancellationToken</param>
+        /// <returns></returns>
+        //public static AddressItem GenerateAddress2(string seed, int index, int security, CancellationToken cancellationToken)
+        //{
+        //    var trits = Crypto.Converter.GetTrits(seed);
+        //    string address = GenerateAddress(key, false, cancellationToken);
+
+        //    var trits2 = Utils.Converter.ToTrits(seed);
+        //    int[] key2 = new Utils.Signing().Key(trits2, index, security);
+
+        //    var addressItem = new AddressItem()
+        //    {
+        //        Address = address,
+        //        PrivateKey = key,
+        //        Index = index,
+        //        Balance = 0
+        //    };
+
+        //    return addressItem;
+        //}
 
         /// <summary>
         ///  Generates an address from private key
@@ -81,7 +108,26 @@ namespace Borlay.Iota.Library.Utils
             
             cancellationToken.ThrowIfCancellationRequested();
 
-            string address = Crypto.Converter.GetTrytes(addressTrits);
+            string address = Converter.GetTrytes(addressTrits);
+
+            if (checksum)
+                address = Checksum.AddChecksum(address);
+
+            return address;
+        }
+
+        public static string GenerateAddress(int[] privateKey, bool checksum, CancellationToken cancellationToken)
+        {
+            var signing = new Signing2(new Kerl());
+            var digests = signing.digests(privateKey);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var addressTrits = signing.address(digests);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            string address = Converter.ToTrytes(addressTrits);
 
             if (checksum)
                 address = Checksum.AddChecksum(address);
@@ -91,15 +137,18 @@ namespace Borlay.Iota.Library.Utils
 
         public static void SignSignatures(this IEnumerable<TransactionItem> transactionItems, IEnumerable<AddressItem> addressItems)
         {
-            throw new NotImplementedException("SignSignatures");
+            // throw new NotImplementedException("SignSignatures");
+
             // todo need to implement
-            //var curl = new Curl();
-            //foreach(var transactionItem in transactionItems)
-            //{
-            //    var addressItem = addressItems.FirstOrDefault(a => a.Address == transactionItem.Address);
-            //    if(addressItem != null)
-            //        transactionItem.SignSignature(addressItem.PrivateKey, curl);
-            //}
+            ICurl kerl = new Kerl();
+            foreach(var transactionItem in transactionItems)
+            {
+                var addressItem = addressItems.FirstOrDefault(a => a.Address == transactionItem.Address);
+                if (addressItem != null)
+                {                 
+                    transactionItem.SignSignature(addressItem.PrivateKeyTrints, kerl);
+                }
+            }
         }
 
         public static void SignSignature(this TransactionItem transactionItem, int[] addressPrivateKey, ICurl curl)

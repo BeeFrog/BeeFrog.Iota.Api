@@ -22,8 +22,7 @@ namespace Borlay.Iota.Library.Iri
             return client.RequestAsync<TResponse>(request, CancellationToken.None);
         }
 
-        public static async Task<string[]> FindTransactionsFromAddresses(this IriApi api,
-            params string[] addresses)
+        public static async Task<string[]> FindTransactionsFromAddresses(this IriApi api, params string[] addresses)
         {
             var transactionTrytes = await api.FindTransactions(addresses, null, null, null);
             return transactionTrytes;

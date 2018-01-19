@@ -65,6 +65,6 @@ namespace Borlay.Iota.Library.Crypto
         /// <value>
         /// The state.
         /// </value>
-        int[] State { get; }
+        int[] State { get; set; }
     }
 }

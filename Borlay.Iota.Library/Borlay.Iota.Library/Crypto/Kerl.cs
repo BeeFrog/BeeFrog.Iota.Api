@@ -6,28 +6,32 @@ using System.Linq;
 
 namespace Borlay.Iota.Library.Crypto
 {
-    public class Kerl
+    public class Kerl : ICurl
     {
         public const int NUMBER_OF_ROUNDS = 81;
         public const int HASH_LENGTH = 243;
-        //public const int STATE_LENGTH = 3 * HASH_LENGTH;
+        public const int STATE_LENGTH = 3 * HASH_LENGTH;
+        private static int[] truthTable = new int[] { 1, 0, -1, 2, 1, -1, 0, 2, -1, 1, 0 };
 
         public const int BIT_HASH_LENGTH = 384;
         private KeccakDigest sha3Digest;
 
+        public int[] State { get; set; }
+
         public Kerl()
         {
             sha3Digest = new KeccakDigest(BIT_HASH_LENGTH);
+            State = new int[STATE_LENGTH];
         }
 
         public void Initialize()
         {
-
         }
 
-        public void Reset()
+        public ICurl Reset()
         {
             sha3Digest.Reset();
+            return this;
         }
 
         public void Absorb(sbyte[] trits, int offset, int length)
@@ -107,7 +111,7 @@ namespace Borlay.Iota.Library.Crypto
 
             for (int i = 0; i < inputInts.Length; i++)
             {
-                var bytes = BitConverter.GetBytes(inputInts[i]);
+                var bytes = BitConverter.GetBytes(inputInts[i]);                
                 if (!BitConverter.IsLittleEndian)
                     Array.Reverse(bytes);
                 Array.Copy(bytes, 0, byteArray, i * len, len);
@@ -142,5 +146,62 @@ namespace Borlay.Iota.Library.Crypto
             return result;
         }
 
+        public ICurl Clone()
+        {
+            return new Kerl();
+        }
+
+        public ICurl Absorb(int[] trits, int offset, int length)
+        {
+            var trytes = Utils.Converter.ToTrytes(trits, offset, length);
+            var sbytes = Utils.Converter.GetTrits(trytes);
+            //var sbytes = Utils.Converter.ToSBytes(trits, offset, length);
+            this.Absorb(sbytes, 0, sbytes.Length);
+
+            return this;            
+        }
+
+        public ICurl Absorb(int[] trits)
+        {
+            return this.Absorb(trits, 0, trits.Length);
+        }
+
+        public int[] Squeeze(int[] trits, int offset, int length)
+        {
+            //var sbytes = Utils.Converter.ToSBytes(trits, offset, length);
+
+            var trytes = Utils.Converter.ToTrytes(trits, offset, length);
+            var sbytes = Utils.Converter.GetTrits(trytes);
+
+            this.Squeeze(sbytes, 0, sbytes.Length);
+            var returnedTrytes = Utils.Converter.GetTrytes(sbytes);
+            var response = Utils.Converter.ToTrits(returnedTrytes);
+            Array.Copy(response,0, trits, offset, length);
+            return response;
+        }
+
+        public int[] Squeeze(int[] trits)
+        {
+            return this.Squeeze(trits, 0, trits.Length);
+        }
+
+        public ICurl Transform()
+        {
+            int[] scratchpad = new int[STATE_LENGTH];
+            int scratchpadIndex = 0;
+            for (int round = 0; round < NUMBER_OF_ROUNDS; round++)
+            {
+                Array.Copy(State, 0, scratchpad, 0, STATE_LENGTH);
+                for (int stateIndex = 0; stateIndex < STATE_LENGTH; stateIndex++)
+                {
+                    State[stateIndex] =
+                        truthTable[
+                            scratchpad[scratchpadIndex] +
+                            scratchpad[scratchpadIndex += (scratchpadIndex < 365 ? 364 : -365)] * 3 + 4];
+                }
+            }
+
+            return this;
+        }
     }
 }

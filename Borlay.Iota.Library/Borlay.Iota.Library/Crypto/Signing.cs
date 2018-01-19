@@ -9,7 +9,7 @@ namespace Borlay.Iota.Library.Crypto
     {
         public sbyte[] Key(sbyte[] seed, int index, int length)
         {
-            if ((seed.Length % 243) != 0)
+            if ((seed.Length % 243) != 0) 
             {
                 var listSeed = seed.ToList();
                 while ((listSeed.Count % 243) != 0)
@@ -19,7 +19,7 @@ namespace Borlay.Iota.Library.Crypto
                 seed = listSeed.ToArray();
             }
 
-            var indexTrits = Converter.GetTritsFromInt(index);
+            var indexTrits = Utils.Converter.GetTritsFromInt(index);
             var subseed = Adder.Add(seed, indexTrits);
 
             var kerl = new Kerl();
@@ -71,7 +71,7 @@ namespace Borlay.Iota.Library.Crypto
                         var kKerl = new Kerl();
                         kKerl.Initialize();
                         kKerl.Absorb(buffer, 0, buffer.Length);
-                        kKerl.Squeeze(buffer, 0, Curl.HASH_LENGTH);
+                        kKerl.Squeeze(buffer, 0, Curl.HashLength);
                     }
 
                     for (var k = 0; k < 243; k++)
@@ -85,7 +85,7 @@ namespace Borlay.Iota.Library.Crypto
 
                 kerl.Initialize();
                 kerl.Absorb(keyFragment, 0, keyFragment.Length);
-                kerl.Squeeze(buffer, 0, Curl.HASH_LENGTH);
+                kerl.Squeeze(buffer, 0, Curl.HashLength);
 
                 for (var j = 0; j < 243; j++)
                 {
@@ -98,13 +98,13 @@ namespace Borlay.Iota.Library.Crypto
 
         public sbyte[] Address(sbyte[] digests)
         {
-            var addressTrits = new sbyte[Curl.HASH_LENGTH];
+            var addressTrits = new sbyte[Curl.HashLength];
 
             var kerl = new Kerl();
 
             kerl.Initialize();
             kerl.Absorb(digests, 0, digests.Length);
-            kerl.Squeeze(addressTrits, 0, Curl.HASH_LENGTH);
+            kerl.Squeeze(addressTrits, 0, Curl.HashLength);
 
             return addressTrits;
         }

@@ -1,5 +1,6 @@
 ﻿using Borlay.Iota.Library.Crypto;
 using Borlay.Iota.Library.Crypto.Sha3;
+using Borlay.Iota.Library.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Concurrent;
@@ -15,6 +16,61 @@ namespace Borlay.Iota.Library.Tests
     [TestClass]
     public class KerlTests
     {
+        //TODO: implement expected results from here:https://github.com/iotaledger/kerl/blob/master/IOTA-Kerl-spec.md
+
+        [TestMethod]
+        public void kurlOneAbsorb()
+        {
+            int[] initial_value = Converter.ToTrits("EMIDYNHBWMBCXVDEFOFWINXTERALUKYYPPHKP9JJFGJEIUY9MUDVNFZHMMWZUYUSWAIOWEVTHNWMHANBH");
+            ICurl k = new Kerl();
+            k.Absorb(initial_value, 0, initial_value.Length);
+            int[] hash_value = new int[Curl.HashLength];
+            k.Squeeze(hash_value, 0, hash_value.Length);
+            String hash = Converter.ToTrytes(hash_value);
+            Assert.AreEqual("EJEAOOZYSAWFPZQESYDHZCGYNSTWXUMVJOVDWUNZJXDGWCLUFGIMZRMGCAZGKNPLBRLGUNYWKLJTYEAQX", hash);
+        }
+
+        [TestMethod]
+        public void KerlOneAbsorbMethod2()
+        {
+            var input = "EMIDYNHBWMBCXVDEFOFWINXTERALUKYYPPHKP9JJFGJEIUY9MUDVNFZHMMWZUYUSWAIOWEVTHNWMHANBH";
+            var expected = "EJEAOOZYSAWFPZQESYDHZCGYNSTWXUMVJOVDWUNZJXDGWCLUFGIMZRMGCAZGKNPLBRLGUNYWKLJTYEAQX";
+
+            var trits = Converter.GetTrits(input);
+            var kerl = new Kerl();
+            //kerl.Initialize();
+            kerl.Absorb(trits, 0, trits.Length);
+            var hashTrits = new sbyte[Kerl.HASH_LENGTH];
+            kerl.Squeeze(hashTrits, 0, Kerl.HASH_LENGTH);
+            var hash = Converter.GetTrytes(hashTrits);
+            Assert.AreEqual(expected, hash);
+        }
+
+        [TestMethod]
+        public void kurlMultiSqueeze()
+        {
+            int[]
+            initial_value = Converter.ToTrits("9MIDYNHBWMBCXVDEFOFWINXTERALUKYYPPHKP9JJFGJEIUY9MUDVNFZHMMWZUYUSWAIOWEVTHNWMHANBH");
+            ICurl k = new Kerl();
+            k.Absorb(initial_value, 0, initial_value.Length);
+            int[]
+            hash_value = new int[Curl.HashLength * 2];
+            k.Squeeze(hash_value, 0, hash_value.Length);
+            String hash = Converter.ToTrytes(hash_value);
+            Assert.AreEqual("G9JYBOMPUXHYHKSNRNMMSSZCSHOFYOYNZRSZMAAYWDYEIMVVOGKPJBVBM9TDPULSFUNMTVXRKFIDOHUXXVYDLFSZYZTWQYTE9SPYYWYTXJYQ9IFGYOLZXWZBKWZN9QOOTBQMWMUBLEWUEEASRHRTNIQWJQNDWRYLCA", hash);
+        }
+
+        [TestMethod]
+        public void kurlMultiAbsorbMultiSqueeze()
+        {
+            int[] initial_value = Converter.ToTrits("G9JYBOMPUXHYHKSNRNMMSSZCSHOFYOYNZRSZMAAYWDYEIMVVOGKPJBVBM9TDPULSFUNMTVXRKFIDOHUXXVYDLFSZYZTWQYTE9SPYYWYTXJYQ9IFGYOLZXWZBKWZN9QOOTBQMWMUBLEWUEEASRHRTNIQWJQNDWRYLCA");
+            ICurl k = new Kerl();
+            k.Absorb(initial_value, 0, initial_value.Length);
+            int[] hash_value = new int[Curl.HashLength * 2];
+            k.Squeeze(hash_value, 0, hash_value.Length);
+            String hash = Converter.ToTrytes(hash_value);
+            Assert.AreEqual("LUCKQVACOGBFYSPPVSSOXJEKNSQQRQKPZC9NXFSMQNRQCGGUL9OHVVKBDSKEQEBKXRNUJSRXYVHJTXBPDWQGNSCDCBAIRHAQCOWZEBSNHIJIGPZQITIBJQ9LNTDIBTCQ9EUWKHFLGFUVGGUWJONK9GBCDUIMAYMMQX", hash);
+        }
 
 
         [TestMethod]
