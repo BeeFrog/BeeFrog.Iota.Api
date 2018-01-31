@@ -77,7 +77,7 @@ namespace Borlay.Iota.Library
                 {
                     Address = transferItem.Address,
                     SignatureFragment = message,
-                    Value = (i == 0 ? transferItem.Value : 0).ToString(),
+                    Value = i == 0 ? transferItem.Value : 0,
                     Tag = tag,
                 };
 
@@ -104,7 +104,7 @@ namespace Borlay.Iota.Library
                 var transactionItem = new TransactionItem()
                 {
                     Address = addressItem.Address,
-                    Value = (-amount).ToString(), // withdraw all amount
+                    Value = -amount, // withdraw all amount
                     Tag = tag
                 };
                 yield return transactionItem;
@@ -112,7 +112,7 @@ namespace Borlay.Iota.Library
                 transactionItem = new TransactionItem()
                 {
                     Address = addressItem.Address,
-                    Value = "0",
+                    Value = 0,
                     Tag = tag
                 };
                 yield return transactionItem;
@@ -126,7 +126,7 @@ namespace Borlay.Iota.Library
                     transactionItem = new TransactionItem()
                     {
                         Address = reminderAddress,
-                        Value = Math.Abs(withdrawAmount).ToString(),
+                        Value = Math.Abs(withdrawAmount),
                         SignatureFragment = message,
                         Tag = tag
                     };
@@ -170,14 +170,14 @@ namespace Borlay.Iota.Library
             if (withdrawalTransactions != null)
                 transactions.AddRange(withdrawalTransactions);
 
-            var bundleHash = transactions.FinalizeAndNormalizeBundleHash(new Crypto.Curl());
+            var bundleHash = transactions.FinalizeAndNormalizeBundleHash(new Crypto.Kerl());
 
             if (withdrawalTransactions != null)
             {
                 withdrawalTransactions.SignSignatures(fromAddressItems);
             }
 
-            var transactionsBalance = transactions.Sum(t => Int64.Parse(t.Value));
+            var transactionsBalance = transactions.Sum(t => t.Value);
             if (transactionsBalance != 0)
                 throw new IotaException($"Total transactions balance should be zero. Current is '{transactionsBalance}'. There is some bug in code.");
 

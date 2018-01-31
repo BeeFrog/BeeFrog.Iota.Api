@@ -21,9 +21,11 @@ namespace Borlay.Iota.Library.Models
             Nonce = Constants.EmptyTag;
             Tag = Constants.EmptyTag;
             ObsoleteTag = Constants.EmptyTag;
-            ObsoleteTag = ObsoleteTag.Replace('9', 'A');
             SignatureFragment = Constants.EmptyHash;
             Timestamp = Utils.IotaUtils.CreateTimeStampNow();
+            Value = 0;
+            CurrentIndex = 0;
+            LastIndex = 0;
         }
 
         /// <summary>
@@ -82,12 +84,12 @@ namespace Borlay.Iota.Library.Models
             Hash = Converter.ToTrytes(hash);
             SignatureFragment = trytes.Substring(0, 2187);
             Address = trytes.Substring(2187, 2268 - 2187);
-            Value = "" + Converter.ToLongValue(ArrayUtils.SubArray(transactionTrits, 6804, 6837));
+            Value = Converter.ToLongValue(ArrayUtils.SubArray(transactionTrits, 6804, 6837));
             ObsoleteTag = trytes.Substring(2295, 2322 - 2295);
-            Value = "" + Converter.ToLongValue(trytes, 2268, 2295);
+            Value = Converter.ToLongValue(trytes, 2268, 2295);
             Timestamp = Converter.ToLongValue(trytes, 2322, 2331);
-            CurrentIndex = "" + Converter.ToLongValue(trytes, 2331, 2340);
-            LastIndex = "" + Converter.ToLongValue(trytes, 2340, 2349);
+            CurrentIndex = (int)Converter.ToLongValue(trytes, 2331, 2340);
+            LastIndex = (int)Converter.ToLongValue(trytes, 2340, 2349);
             Bundle = trytes.Substring(2349, 2430 - 2349);
             TrunkTransaction = trytes.Substring(2430, 2511 - 2430);
             BranchTransaction = trytes.Substring(2511, 2592 - 2511);
@@ -105,7 +107,7 @@ namespace Borlay.Iota.Library.Models
         /// <param name="value">The value.</param>
         /// <param name="tag">The tag.</param>
         /// <param name="timestamp">The timestamp.</param>
-        public TransactionItem(string address, string value, string tag, DateTime? timestamp = null)
+        public TransactionItem(string address, long value, string tag, DateTime? timestamp = null)
         {
             Address = address;
             Value = value;
@@ -115,8 +117,6 @@ namespace Borlay.Iota.Library.Models
 
         private string tag;
         private string address;
-        private string value;
-        private string timestamp;
         private string signatureMessageChunk;
         private string digest;
         private string type;
@@ -125,8 +125,6 @@ namespace Borlay.Iota.Library.Models
         private string trunkTransaction;
         private string branchTransaction;
         private string signatureFragment;
-        private string lastIndex;
-        private string currentIndex;
         private string nonce;
         private bool persistence;
 
@@ -155,7 +153,7 @@ namespace Borlay.Iota.Library.Models
         /// <summary>
         /// The Obsolete tag which is no longer used.
         /// </summary>
-        public string ObsoleteTag { get; private set; }
+        public string ObsoleteTag { get; internal set; }
 
         /// <summary>
         /// Gets or sets the type.
@@ -251,21 +249,7 @@ namespace Borlay.Iota.Library.Models
         /// <value>
         /// The value.
         /// </value>
-        public string Value
-        {
-            get
-            {
-                return value;
-            }
-            set
-            {
-                if (value != this.value)
-                {
-                    this.value = value;
-                    NotifyPropertyChanged();
-                }
-            }
-        }
+        public long Value { get; set; }
 
         /// <summary>
         /// Gets or sets the timestamp.
@@ -369,21 +353,7 @@ namespace Borlay.Iota.Library.Models
         /// <value>
         /// The last index.
         /// </value>
-        public string LastIndex
-        {
-            get
-            {
-                return lastIndex;
-            }
-            set
-            {
-                if (value != this.lastIndex)
-                {
-                    this.lastIndex = value;
-                    NotifyPropertyChanged();
-                }
-            }
-        }
+        public int LastIndex { get; set; }
 
         /// <summary>
         /// Gets the time the transaction was attached to the tangle in milliseconds from the date 01/01/1970.
@@ -406,21 +376,7 @@ namespace Borlay.Iota.Library.Models
         /// <value>
         /// The index of the current.
         /// </value>
-        public string CurrentIndex
-        {
-            get
-            {
-                return currentIndex;
-            }
-            set
-            {
-                if (value != this.currentIndex)
-                {
-                    this.currentIndex = value;
-                    NotifyPropertyChanged();
-                }
-            }
-        }
+        public int CurrentIndex { get; set; }
 
         /// <summary>
         /// Gets or sets the nonce.
@@ -467,15 +423,34 @@ namespace Borlay.Iota.Library.Models
         }
 
         /// <summary>
+        /// Converts the transaction Trytes for bundle hashing.
+        /// </summary>
+        /// <returns></returns>
+        public string GetBundleTrytes()
+        {
+            int[] valueTrits = Converter.ToTrits(""+Value, 81);
+            int[] timestampTrits = Converter.ToTrits("" + Timestamp, 27);
+            int[] currentIndexTrits = Converter.ToTrits(""+CurrentIndex, 27);
+            int[] lastIndexTrits = Converter.ToTrits(""+LastIndex, 27);
+
+            return Address
+                   + Converter.ToTrytes(valueTrits)
+                   + ObsoleteTag
+                   + Converter.ToTrytes(timestampTrits)
+                   + Converter.ToTrytes(currentIndexTrits)
+                   + Converter.ToTrytes(lastIndexTrits);                   
+        }
+
+        /// <summary>
         /// Converts the transaction to the corresponding trytes representation
         /// </summary>
         /// <returns></returns>
         public string ToTransactionTrytes()
         {
-            int[] valueTrits = Converter.ToTrits(Value, 81);
+            int[] valueTrits = Converter.ToTrits(""+Value, 81);
             int[] timestampTrits = Converter.ToTrits("" + Timestamp, 27);
-            int[] currentIndexTrits = Converter.ToTrits(CurrentIndex, 27);
-            int[] lastIndexTrits = Converter.ToTrits(LastIndex, 27);
+            int[] currentIndexTrits = Converter.ToTrits(""+CurrentIndex, 27);
+            int[] lastIndexTrits = Converter.ToTrits(""+LastIndex, 27);
 
             if (this.AttachmentTimestamp <= 0)
             {

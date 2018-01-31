@@ -13,34 +13,56 @@ namespace Borlay.Iota.Library.Models
         {
             customCurl.Reset();
             var transactionCount = transactionItems.Count();
+            bool valid = false;
+            string hashInTrytes= "";
 
-            for (int i = 0; i < transactionCount; i++)
+            while (!valid)
             {
-                var transaction = transactionItems.ElementAt(i);
+                for (int i = 0; i < transactionCount; i++)
+                {
+                    var transaction = transactionItems.ElementAt(i);
+                    transaction.CurrentIndex = i;
+                    transaction.LastIndex = transactionCount - 1;
+                    //int[] valueTrits = Converter.ToTrits(transaction.Value, 81);
 
-                int[] valueTrits = Converter.ToTrits(transaction.Value, 81);
+                    //int[] timestampTrits = Converter.ToTrits(""+transaction.Timestamp, 27);
 
-                int[] timestampTrits = Converter.ToTrits(""+transaction.Timestamp, 27);
+                    //int[] currentIndexTrits = Converter.ToTrits(transaction.CurrentIndex = ("" + i), 27);
 
-                int[] currentIndexTrits = Converter.ToTrits(transaction.CurrentIndex = ("" + i), 27);
+                    //int[] lastIndexTrits = Converter.ToTrits(
+                    //    transaction.LastIndex = ("" + (transactionCount - 1)), 27);
 
-                int[] lastIndexTrits = Converter.ToTrits(
-                    transaction.LastIndex = ("" + (transactionCount - 1)), 27);
+                    //string stringToConvert = transaction.Address
+                    //                         + Converter.ToTrytes(valueTrits)
+                    //                         + transaction.ObsoleteTag +
+                    //                         Converter.ToTrytes(timestampTrits)
+                    //                         + Converter.ToTrytes(currentIndexTrits) +
+                    //                         Converter.ToTrytes(lastIndexTrits);
 
-                string stringToConvert = transaction.Address
-                                         + Converter.ToTrytes(valueTrits)
-                                         + transaction.Tag +
-                                         Converter.ToTrytes(timestampTrits)
-                                         + Converter.ToTrytes(currentIndexTrits) +
-                                         Converter.ToTrytes(lastIndexTrits);
+                    var trytes = transaction.GetBundleTrytes();
 
-                int[] t = Converter.ToTrits(stringToConvert);
-                customCurl.Absorb(t, 0, t.Length);
+                    int[] t = Converter.ToTrits(trytes);
+                    customCurl.Absorb(t, 0, t.Length);
+                }
+
+                int[] hash = new int[243];
+                customCurl.Squeeze(hash, 0, hash.Length);
+                hashInTrytes = Converter.ToTrytes(hash);
+
+                bool found = false;
+                var normalizedBundleValues = NormalizedBundle(hashInTrytes);
+                foreach (int normalizedBundleValue in normalizedBundleValues)
+                {
+                    if (normalizedBundleValue == 13)
+                    {
+                        found = true;
+                        var obsoleteTagTrits = Converter.ToTritsString(transactionItems.First().ObsoleteTag);
+                        Converter.Increment(obsoleteTagTrits, 81);
+                        transactionItems.First().ObsoleteTag = Converter.ToTrytes(obsoleteTagTrits);
+                    }
+                }
+                valid = !found;
             }
-
-            int[] hash = new int[243];
-            customCurl.Squeeze(hash, 0, hash.Length);
-            string hashInTrytes = Converter.ToTrytes(hash);
 
             foreach (var transaction in transactionItems)
                 transaction.Bundle = hashInTrytes;

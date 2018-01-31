@@ -153,7 +153,7 @@ namespace Borlay.Iota.Library.Utils
 
         public static void SignSignature(this TransactionItem transactionItem, int[] addressPrivateKey, ICurl curl)
         {
-            var value = Int64.Parse(transactionItem.Value);
+            var value = transactionItem.Value;
             if (value > 0)
                 return;
                 //throw new IotaException($"Cannot sign transaction with value greater than 0. Current value '{value}'");
@@ -174,7 +174,7 @@ namespace Borlay.Iota.Library.Utils
         }
 
         /// <summary>
-        /// Create a unix date time by using the number of seconds from 01/01/1970.
+        /// Create a unix date time by using the number of milliseconds from 01/01/1970.
         /// </summary>
         /// <returns></returns>
         internal static long CreateTimeStampNow()
@@ -190,7 +190,7 @@ namespace Borlay.Iota.Library.Utils
         /// <returns></returns>
         internal static long CreateAttachmentTimeStampNow()
         {
-            var timestamp = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+            var timestamp = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalMilliseconds;
             return timestamp; // 1499592594121;
         }
     }

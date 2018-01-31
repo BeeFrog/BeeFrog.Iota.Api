@@ -9,14 +9,9 @@ namespace Borlay.Iota.Library.Models
     /// </summary>
     public class TransferItem : AddressModelBase
     {
-        private string hash;
-        private int persistence;
-        private string timestamp;
-
         private long value;
         private string message;
         private string tag;
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TransferItem"/> class.
@@ -25,88 +20,13 @@ namespace Borlay.Iota.Library.Models
         /// <param name="value">The value.</param>
         /// <param name="message">The message.</param>
         /// <param name="tag">The tag.</param>
-        public TransferItem() //(string address, long value, string message, string tag)
+        public TransferItem()
         {
-            //this.Address = address;
-            //this.Value = value;
-            //this.Message = message;
-            //this.Tag = tag;
-        }
-
-        ///// <summary>
-        ///// Gets or sets the hash.
-        ///// </summary>
-        ///// <value>
-        ///// The hash.
-        ///// </value>
-        //public string Hash
-        //{
-        //    get
-        //    {
-        //        return this.hash;
-        //    }
-        //    set
-        //    {
-        //        if (value != this.hash)
-        //        {
-        //            this.hash = value;
-        //            NotifyPropertyChanged();
-        //        }
-        //    }
-        //}
-
-        ///// <summary>
-        ///// Gets or sets the persistence.
-        ///// </summary>
-        ///// <value>
-        ///// The persistence.
-        ///// </value>
-        //public int Persistence
-        //{
-        //    get
-        //    {
-        //        return this.persistence;
-        //    }
-        //    set
-        //    {
-        //        if (value != this.persistence)
-        //        {
-        //            this.persistence = value;
-        //            NotifyPropertyChanged();
-        //        }
-        //    }
-        //}
-
-        ///// <summary>
-        ///// Gets or sets the timestamp.
-        ///// </summary>
-        ///// <value>
-        ///// The timestamp.
-        ///// </value>
-        //public string Timestamp
-        //{
-        //    get
-        //    {
-        //        return this.timestamp;
-        //    }
-        //    set
-        //    {
-        //        if (value != this.timestamp)
-        //        {
-        //            this.timestamp = value;
-        //            NotifyPropertyChanged();
-        //        }
-        //    }
-        //}
-
-        
+        }        
 
         /// <summary>
-        /// Gets or sets the value.
+        /// Gets or sets the value in iota. (e.g 1 = 1 iota, 1000000 = 1 MIota)
         /// </summary>
-        /// <value>
-        /// The value.
-        /// </value>
         public long Value
         {
             get
@@ -124,15 +44,15 @@ namespace Borlay.Iota.Library.Models
         }
 
         /// <summary>
-        /// Gets or sets the message.
-        /// </summary>
-        /// <value>
-        /// The message.
-        /// </value>
+        /// Gets or sets the message in Trytes (A-Z and 9).
+        /// See <see cref="Utils.Converter.AsciiToTrytes"/> to convert from ASCII message.
+        /// This can be up to X in length.
+        /// </summary>        
         public string Message
         {
             get
             {
+                
                 return this.message;
             }
             set

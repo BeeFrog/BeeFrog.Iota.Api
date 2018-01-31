@@ -86,7 +86,7 @@ namespace Borlay.Iota.Library
             this.MaxAddressIndex = 500;
             this.Depth = 9;
             this.AddressSecurity = 2;
-            this.RebroadcastMaximumPowTime = 20000;
+            this.RebroadcastMaximumPowTime = 5 * 60 * 1000;
             this.NonceSeeker = nonceSeeker;
         }
 
@@ -370,7 +370,7 @@ namespace Borlay.Iota.Library
         /// <returns></returns>
         public async Task<string> FastReattach(IEnumerable<TransactionItem> transactionItems, CancellationToken cancellationToken)
         {
-            var transactionItem = transactionItems.FirstOrDefault(t => t.CurrentIndex == "0");
+            var transactionItem = transactionItems.FirstOrDefault(t => t.CurrentIndex == 0);
 
             if (transactionItem == null)
                 throw new Exception("Transaction with index '0' not found");

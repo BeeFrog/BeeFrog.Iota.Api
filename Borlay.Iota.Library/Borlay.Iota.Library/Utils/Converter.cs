@@ -172,7 +172,11 @@ namespace Borlay.Iota.Library.Utils
             int[] d = new int[3 * trytes.Length];
             for (int i = 0; i < trytes.Length; i++)
             {
-                Array.Copy(TryteToTritsMappings[Constants.TryteAlphabet.IndexOf(trytes[i])], 0, d,
+                var tryteIndex = Constants.TryteAlphabet.IndexOf(trytes[i]);
+                if (tryteIndex < 0)
+                    throw new InvalidTryteException($"The specified tryte is invalid. It contains '{trytes[i]}'");
+
+                Array.Copy(TryteToTritsMappings[tryteIndex], 0, d,
                     i * NumberOfTritsInATryte, NumberOfTritsInATryte);
             }
             return d;
@@ -240,17 +244,7 @@ namespace Borlay.Iota.Library.Utils
             }
             else
             {
-                int[] d = new int[3 * trytes.Length];
-                for (int i = 0; i < trytes.Length; i++)
-                {
-                    var tryteIndex = Constants.TryteAlphabet.IndexOf(trytes[i]);
-                    if (tryteIndex < 0)
-                        throw new InvalidTryteException($"The specified tryte is invalid. It contains '{trytes[i]}'");
-
-                    Array.Copy(TryteToTritsMappings[tryteIndex], 0, d,
-                        i * NumberOfTritsInATryte, NumberOfTritsInATryte);
-                }
-                return d;
+                return ToTritsString(trytes);
             }
             return trits.ToArray();
         }
