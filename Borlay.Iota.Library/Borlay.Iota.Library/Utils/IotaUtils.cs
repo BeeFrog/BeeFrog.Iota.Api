@@ -63,33 +63,6 @@ namespace Borlay.Iota.Library.Utils
         }
 
         /// <summary>
-        /// Offline generates an address
-        /// </summary>
-        /// <param name="seed">The seed from which an address should be generated</param>
-        /// <param name="index">The index of the address</param>
-        /// <param name="security">Security level (1, 2, 3). Use 2 if you don't know what to use.</param>
-        /// <param name="cancellationToken">The CancellationToken</param>
-        /// <returns></returns>
-        //public static AddressItem GenerateAddress2(string seed, int index, int security, CancellationToken cancellationToken)
-        //{
-        //    var trits = Crypto.Converter.GetTrits(seed);
-        //    string address = GenerateAddress(key, false, cancellationToken);
-
-        //    var trits2 = Utils.Converter.ToTrits(seed);
-        //    int[] key2 = new Utils.Signing().Key(trits2, index, security);
-
-        //    var addressItem = new AddressItem()
-        //    {
-        //        Address = address,
-        //        PrivateKey = key,
-        //        Index = index,
-        //        Balance = 0
-        //    };
-
-        //    return addressItem;
-        //}
-
-        /// <summary>
         ///  Generates an address from private key
         /// </summary>
         /// <param name="seed"></param>
@@ -118,12 +91,12 @@ namespace Borlay.Iota.Library.Utils
 
         public static string GenerateAddress(int[] privateKey, bool checksum, CancellationToken cancellationToken)
         {
-            var signing = new Signing2(new Kerl());
-            var digests = signing.digests(privateKey);
+            var signing = new Signing(new Kerl());
+            var digests = signing.Digests(privateKey);
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            var addressTrits = signing.address(digests);
+            var addressTrits = signing.Address(digests);
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -137,9 +110,6 @@ namespace Borlay.Iota.Library.Utils
 
         public static void SignSignatures(this IEnumerable<TransactionItem> transactionItems, IEnumerable<AddressItem> addressItems)
         {
-            // throw new NotImplementedException("SignSignatures");
-
-            // todo need to implement
             ICurl kerl = new Kerl();
             foreach(var transactionItem in transactionItems)
             {

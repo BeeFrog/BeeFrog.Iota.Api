@@ -26,6 +26,8 @@ namespace Borlay.Iota.Library.Models
             Value = 0;
             CurrentIndex = 0;
             LastIndex = 0;
+            this.AttachmentTimestampLowerBound = 0;
+            this.AttachmentTimestampUpperBound = 3812798742493;
         }
 
         /// <summary>
@@ -469,8 +471,8 @@ namespace Borlay.Iota.Library.Models
                    + BranchTransaction
                    + Tag
                    + Converter.ToTrytes(Converter.ToTrits("" + this.AttachmentTimestamp, 27)) // AttachmentTime
-                   + Converter.ToTrytes(Converter.ToTrits("0", 27)) // AttachmentLowerBound
-                   + Converter.ToTrytes(Converter.ToTrits("12", 27)) // AttachmentUpperBound
+                   + Converter.ToTrytes(Converter.ToTrits("" + this.AttachmentTimestampLowerBound, 27)) // AttachmentLowerBound
+                   + Converter.ToTrytes(Converter.ToTrits("" + this.AttachmentTimestampUpperBound, 27)) // AttachmentUpperBound
                    + Nonce;
         }
 

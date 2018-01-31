@@ -125,6 +125,18 @@ namespace Borlay.Iota.Library.Tests
             Assert.AreEqual(branch, getBranch);
         }
 
+        [TestMethod]
+        public void CreateAddresses_FromSeed_CorrectAddressesReturned()
+        {
+            var seed = "ABM9ADN999VDXCHYJXDKUQITXAWQPBWZGYTBGTEIFWXOZTMHESEVHYLXWASWQFEJHUAKHIKSCA9AL9KMG";
+
+            for (int i = 0; i < 10; i++)
+            {
+                var address = IotaUtils.GenerateAddress(seed, i, 2, System.Threading.CancellationToken.None);
+                Console.WriteLine($"{i}: {address.AddressWithCheckSum}");
+            }
+        }
+
         private bool ContainsChars(string value, string chars)
         {
             foreach (var v in value)

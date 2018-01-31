@@ -9,206 +9,192 @@ using System.Threading;
 
 namespace Borlay.Iota.Library.Utils
 {
-    /// <summary>
-    /// Ask cfb
-    /// </summary>
     public class Signing
     {
+        public readonly static int KEY_LENGTH = 6561;
+        private const int NUMBER_OF_ROUNDS = 27;
         private ICurl curl;
 
-        private const int HASH_LENGTH = 243;
-        private int STATE_LENGTH = 3 * HASH_LENGTH;
-        private const int NUMBER_OF_ROUNDS = 27;
-
-
+        /**
+         * public Signing() {
+         * this(null);
+         * }
+         *
+         * /**
+         *
+         * @param curl
+         */
         public Signing(ICurl curl)
         {
-            this.curl = curl;
+            this.curl = curl ?? this.GetICurlObject();
         }
 
-        public Signing()
+        /**
+         * @param inSeed
+         * @param index
+         * @param security
+         * @return
+         * @throws ArgumentException is thrown when the specified security level is not valid.
+         */
+        public int[] Key(int[] inSeed, int index, int security)
         {
-            this.curl = new Curl();
-        }
+            if (security < 1) {
+                throw new ArgumentException(Constants.INVALID_SECURITY_LEVEL_INPUT_ERROR);
+            }
 
-        public int[] Key(int[] seed, int index, int length)
-        {
-            int[] subseed = seed;
+            int[] seed = (int[])inSeed.Clone();
 
-            for (int i = 0; i < index; i++)
-            {
-                for (int j = 0; j < HASH_LENGTH; j++)
-                {
-                    if (++subseed[j] > 1)
-                    {
-                        subseed[j] = -1;
-                    }
-                    else
-                    {
+            // Derive subseed.
+            for (int i = 0; i < index; i++) {
+                for (int j = 0; j < seed.Length; j++) {
+                    if (++seed[j] > 1) {
+                        seed[j] = -1;
+                    } else {
                         break;
                     }
                 }
             }
 
+            ICurl curl = this.GetICurlObject();
             curl.Reset();
-            curl.Absorb(subseed, 0, subseed.Length);
-            curl.Squeeze(subseed, 0, subseed.Length);
+            curl.Absorb(seed, 0, seed.Length);
+            // seed[0..HASH_LENGTH] contains subseed
+            curl.Squeeze(seed, 0, seed.Length);
             curl.Reset();
-            curl.Absorb(subseed, 0, subseed.Length);
+            // absorb subseed
+            curl.Absorb(seed, 0, seed.Length);
 
-            IList<int> key = new List<int>();
-            int[] buffer = new int[subseed.Length];
+            int[] key = new int[security * Curl.HashLength * NUMBER_OF_ROUNDS];  //TODO is this not 81!!
+            int[] buffer = new int[seed.Length];
             int offset = 0;
 
-            while (length-- > 0)
-            {
-                for (int i = 0; i < NUMBER_OF_ROUNDS; i++)
-                {
-                    curl.Squeeze(buffer, offset, buffer.Length);
-                    for (int j = 0; j < HASH_LENGTH; j++)
-                    {
-                        key.Add(buffer[j]);
-                    }
+            while (security-- > 0) {
+                for (int i = 0; i < NUMBER_OF_ROUNDS; i++) {
+                    curl.Squeeze(buffer, 0, seed.Length);
+
+                    Array.Copy(buffer, 0, key, offset, Curl.HashLength);
+
+                    offset += Curl.HashLength;
                 }
             }
-            return ToIntArray(key);
+            return key;
         }
 
-        private static int[] ToIntArray(IList<int> key)
+        public int[] SignatureFragment(int[] normalizedBundleFragment, int[] keyFragment)
         {
-            int[] a = new int[key.Count];
-            int i = 0;
-            foreach (int v in key)
+            int[] signatureFragment = (int[])keyFragment.Clone();
+            
+            for (int i = 0; i < NUMBER_OF_ROUNDS; i++)
             {
-                a[i++] = v;
+
+                for (int j = 0; j < 13 - normalizedBundleFragment[i]; j++)
+                {
+                    curl.Reset()
+                            .Absorb(signatureFragment, i * Curl.HashLength, Curl.HashLength)
+                            .Squeeze(signatureFragment, i * Curl.HashLength, Curl.HashLength);
+                }
             }
-            return a;
+
+            return signatureFragment;
+        }
+
+        public int[] Address(int[] digests)
+        {
+            int[] address = new int[Curl.HashLength];
+            curl.Reset()
+                .Absorb(digests, 0, digests.Length)
+                .Squeeze(address, 0, address.Length);
+
+            return address;
         }
 
         public int[] Digests(int[] key)
         {
-            int[] digests = new int[(int)Math.Floor((decimal)key.Length / 6561) * HASH_LENGTH];
-            int[] buffer = new int[HASH_LENGTH];
-            
-            for (int i = 0; i < Math.Floor((decimal)key.Length / 6561); i++)
+            int security = (int)Math.Floor((double)key.Length / KEY_LENGTH);
+
+            int[] digests = new int[security * Curl.HashLength];
+            int[] keyFragment = new int[KEY_LENGTH];
+
+            ICurl curl = this.GetICurlObject();
+            for (int i = 0; i < Math.Floor((double)key.Length / KEY_LENGTH); i++)
             {
-                int[] keyFragment = new int[6561];
-                Array.Copy(key, i * 6561, keyFragment, 0, 6561);
+                Array.Copy(key, i * KEY_LENGTH, keyFragment, 0, KEY_LENGTH);
+                //System.arraycopy(key, i * KEY_LENGTH, keyFragment, 0, KEY_LENGTH);
 
                 for (int j = 0; j < NUMBER_OF_ROUNDS; j++)
                 {
-                    
-                    Array.Copy(keyFragment, j * HASH_LENGTH, buffer, 0, HASH_LENGTH);
                     for (int k = 0; k < 26; k++)
                     {
-                        curl.Reset();
-                        curl.Absorb(buffer, 0, buffer.Length);
-                        curl.Squeeze(buffer, 0, buffer.Length);
-                    }
-                    for (int k = 0; k < HASH_LENGTH; k++)
-                    {
-                        keyFragment[j * HASH_LENGTH + k] = buffer[k];
+                        curl.Reset()
+                                .Absorb(keyFragment, j * Curl.HashLength, Curl.HashLength)
+                                .Squeeze(keyFragment, j * Curl.HashLength, Curl.HashLength);
                     }
                 }
 
                 curl.Reset();
                 curl.Absorb(keyFragment, 0, keyFragment.Length);
-                curl.Squeeze(buffer, 0, buffer.Length);
-
-                for (int j = 0; j < HASH_LENGTH; j++)
-                {
-                    digests[i * HASH_LENGTH + j] = buffer[j];
-                }
+                curl.Squeeze(digests, i * Curl.HashLength, Curl.HashLength);
             }
-            
             return digests;
         }
 
         public int[] Digest(int[] normalizedBundleFragment, int[] signatureFragment)
         {
-            curl.Reset();
-            int[] buffer = new int[HASH_LENGTH];
+            this.curl.Reset();
+            ICurl curl = this.GetICurlObject();
+            int[] buffer = new int[Curl.HashLength];
 
             for (int i = 0; i < NUMBER_OF_ROUNDS; i++)
             {
-                buffer = ArrayUtils.SubArray(signatureFragment, i * HASH_LENGTH, HASH_LENGTH);
-                ;
-                ICurl jCurl = curl.Clone();
+                Array.Copy(signatureFragment, i * Curl.HashLength, buffer, 0, Curl.HashLength);
+
+                // buffer = Array.Copy(signatureFragment, i * Curl.HashLength, buffer, (i + 1) * Curl.HashLength, (i + 1) * NUMBER_OF_ROUNDS);
 
                 for (int j = normalizedBundleFragment[i] + 13; j-- > 0;)
                 {
-                    jCurl.Reset();
-                    jCurl.Absorb(buffer);
-                    jCurl.Squeeze(buffer);
+                    curl.Reset();
+                    curl.Absorb(buffer);
+                    curl.Squeeze(buffer);
                 }
-                curl.Absorb(buffer);
+                this.curl.Absorb(buffer);
             }
-            curl.Squeeze(buffer);
+            this.curl.Squeeze(buffer);
 
             return buffer;
         }
 
-        public int[] Address(int[] digests)
-        {
-            int[] address = new int[HASH_LENGTH];
-            curl.Reset()
-                .Absorb(digests, 0, digests.Length)
-                .Squeeze(address, 0, address.Length);
-            return address;
+        private ICurl GetICurlObject()
+        {            
+            return new Kerl();
         }
 
-        public int[] SignatureFragment(int[] normalizedBundleFragment, int[] keyFragment)
+        public Boolean ValidateSignatures(String expectedAddress, String[] signatureFragments, String bundleHash)
         {
-            int[] hash = new int[HASH_LENGTH];
 
-            for (int i = 0; i < NUMBER_OF_ROUNDS; i++)
-            {
-                Array.Copy(keyFragment, i * HASH_LENGTH, hash, 0, HASH_LENGTH);
-
-                for (int j = 0; j < 13 - normalizedBundleFragment[i]; j++)
-                {
-                    curl.Reset()
-                        .Absorb(hash, 0, hash.Length)
-                        .Squeeze(hash, 0, hash.Length);
-                }
-
-                for (int j = 0; j < HASH_LENGTH; j++)
-                {
-                    Array.Copy(hash, j, keyFragment, i * HASH_LENGTH + j, 1);
-                }
-            }
-
-            return keyFragment;
-        }
-
-        public bool ValidateSignatures(string expectedAddress, string[] signatureFragments, string bundleHash)
-        {
-            //Bundle bundle = new Bundle();
+            Bundle bundle = new Bundle();
 
             var normalizedBundleFragments = new int[3, NUMBER_OF_ROUNDS];
-            int[] normalizedBundleHash = TransactionExtensions.NormalizedBundle(bundleHash); //bundle.NormalizedBundle(bundleHash);
+            int[] normalizedBundleHash = TransactionExtensions.NormalizedBundle(bundleHash);
 
             // Split hash into 3 fragments
             for (int i = 0; i < 3; i++)
             {
-                // normalizedBundleFragments[i] = Arrays.copyOfRange(normalizedBundleHash, i*NUMBER_OF_ROUNDS, (i + 1)*NUMBER_OF_ROUNDS);
-                Array.Copy(normalizedBundleHash, i * NUMBER_OF_ROUNDS, normalizedBundleFragments, 0, NUMBER_OF_ROUNDS);
+                Array.Copy(normalizedBundleHash, i * NUMBER_OF_ROUNDS, normalizedBundleFragments, i * NUMBER_OF_ROUNDS, (i + 1) * NUMBER_OF_ROUNDS);
+                //normalizedBundleFragments[i] = Arrays.copyOfRange(normalizedBundleHash, i * NUMBER_OF_ROUNDS, (i + 1) * NUMBER_OF_ROUNDS);
             }
 
             // Get digests
-            int[] digests = new int[signatureFragments.Length * HASH_LENGTH];
+            int[] digests = new int[signatureFragments.Length * Curl.HashLength];
 
             for (int i = 0; i < signatureFragments.Length; i++)
             {
-                int[] digestBuffer = Digest(ArrayUtils.SliceRow(normalizedBundleFragments, i % 3).ToArray(),
+
+                int[] digestBuffer = this.Digest(ArrayUtils.SliceRow(normalizedBundleFragments, i % 3).ToArray(),
                     Converter.ToTrits(signatureFragments[i]));
 
-                for (int j = 0; j < HASH_LENGTH; j++)
-                {
-                    Array.Copy(digestBuffer, j, digests, i * HASH_LENGTH + j, 1);
-                }
+                Array.Copy(digestBuffer, 0, digests, i * Curl.HashLength, Curl.HashLength);
             }
-            string address = Converter.ToTrytes(Address(digests));
+            string address = Converter.ToTrytes(this.Address(digests));
 
             return (expectedAddress.Equals(address));
         }

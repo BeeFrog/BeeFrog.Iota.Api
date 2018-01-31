@@ -114,8 +114,8 @@ namespace Borlay.Iota.Library.Tests
             var address2 = Utils.IotaUtils.GenerateAddress(seed, 1);
             var pKey = Utils.Converter.ToTrytes(address1.PrivateKeyTrints);
 
-            var signing = new Utils.Signing2(new Kerl());            
-            var key1 = signing.key(Utils.Converter.ToTrits(seed), 0, 2);
+            var signing = new Utils.Signing(new Kerl());            
+            var key1 = signing.Key(Utils.Converter.ToTrits(seed), 0, 2);
 
             var address1again = Utils.IotaUtils.GenerateAddress(key1, false, CancellationToken.None);
             Assert.AreEqual(address1.Address, address1again);
