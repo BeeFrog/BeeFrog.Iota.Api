@@ -23,21 +23,6 @@ namespace Borlay.Iota.Library.Models
                     var transaction = transactionItems.ElementAt(i);
                     transaction.CurrentIndex = i;
                     transaction.LastIndex = transactionCount - 1;
-                    //int[] valueTrits = Converter.ToTrits(transaction.Value, 81);
-
-                    //int[] timestampTrits = Converter.ToTrits(""+transaction.Timestamp, 27);
-
-                    //int[] currentIndexTrits = Converter.ToTrits(transaction.CurrentIndex = ("" + i), 27);
-
-                    //int[] lastIndexTrits = Converter.ToTrits(
-                    //    transaction.LastIndex = ("" + (transactionCount - 1)), 27);
-
-                    //string stringToConvert = transaction.Address
-                    //                         + Converter.ToTrytes(valueTrits)
-                    //                         + transaction.ObsoleteTag +
-                    //                         Converter.ToTrytes(timestampTrits)
-                    //                         + Converter.ToTrytes(currentIndexTrits) +
-                    //                         Converter.ToTrytes(lastIndexTrits);
 
                     var trytes = transaction.GetBundleTrytes();
 
@@ -65,7 +50,9 @@ namespace Borlay.Iota.Library.Models
             }
 
             foreach (var transaction in transactionItems)
+            {
                 transaction.Bundle = hashInTrytes;
+            }
 
             return hashInTrytes;
         }

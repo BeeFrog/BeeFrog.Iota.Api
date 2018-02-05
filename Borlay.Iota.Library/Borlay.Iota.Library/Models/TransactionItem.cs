@@ -78,6 +78,8 @@ namespace Borlay.Iota.Library.Models
             int[] transactionTrits = Converter.ToTrits(trytes);
             int[] hash = new int[243];
 
+            this.RawTrytes = trytes;
+
             // generate the correct transaction hash
             curl.Reset()
                 .Absorb(transactionTrits, 0, transactionTrits.Length)
@@ -423,6 +425,8 @@ namespace Borlay.Iota.Library.Models
                 }
             }
         }
+
+        public string RawTrytes { get; private set; }
 
         /// <summary>
         /// Converts the transaction Trytes for bundle hashing.

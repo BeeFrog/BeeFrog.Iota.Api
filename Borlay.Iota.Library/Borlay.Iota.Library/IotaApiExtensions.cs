@@ -79,6 +79,7 @@ namespace Borlay.Iota.Library
                     SignatureFragment = message,
                     Value = i == 0 ? transferItem.Value : 0,
                     Tag = tag,
+                    ObsoleteTag = tag
                 };
 
                 yield return transactionItem;
@@ -189,10 +190,14 @@ namespace Borlay.Iota.Library
             return trytes.DoPow(trunkTransaction, branchTransaction, minWeightMagnitude, 0, cancellationToken);
         }
 
-        public static async Task<string[]> DoPow(this string[] trytes, string trunkTransaction, string branchTransaction, int minWeightMagnitude, int numberOfThreads, CancellationToken cancellationToken)
+        public static async Task<string[]> DoPow(this string[] transactionsTrytes, string trunkTransaction, string branchTransaction, int minWeightMagnitude, int numberOfThreads, CancellationToken cancellationToken)
         {
             var trunk = trunkTransaction;
             var branch = branchTransaction;
+
+            // Recalculate Bundles
+            // NOT sure i should do this but hey let's check it in a but.
+            var trytes = transactionsTrytes;// ReCalculateAndSetBundles(transactionsTrytes).ToArray();
 
             List<string> resultTrytes = new List<string>();
             for (int i = 0; i < trytes.Length; i++)
@@ -205,14 +210,35 @@ namespace Borlay.Iota.Library
                 var tryte = trytes[i];
                 tryte = tryte.SetApproveTransactions(trunk, branch);
 
-                var diver = new PowDiver();
-                var tryteWithNonce = await diver.DoPow(tryte, minWeightMagnitude, numberOfThreads, cancellationToken);
+                //var diver = new PowDiver();
+                //var tryteWithNonce = await diver.DoPow(tryte, minWeightMagnitude, numberOfThreads, cancellationToken);
+
+                var diver = new PearlDiver();                
+                var tryteWithNonce = diver.DoPow(tryte, minWeightMagnitude);
+
                 var transaction = new TransactionItem(tryteWithNonce);
                 trunk = transaction.Hash;
 
                 resultTrytes.Add(tryteWithNonce);
             }
+
             return resultTrytes.ToArray();
+        }
+
+        public static IEnumerable<string> ReCalculateAndSetBundles(this IEnumerable<string> trytes)
+        {
+            List<TransactionItem> trans = new List<TransactionItem>();
+            foreach(string s in trytes)
+            {
+                var tran = new TransactionItem(s);
+                trans.Add(tran);
+            }
+
+            //var trans = trytes.Select(s => new TransactionItem(s));
+
+            trans.FinalizeBundleHash(new Crypto.Kerl());
+
+            return trans.Select(s => s.ToTransactionTrytes());
         }
 
         public static string Pad(this string value, int size)
