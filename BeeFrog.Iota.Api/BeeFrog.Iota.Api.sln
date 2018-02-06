@@ -1,0 +1,56 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2026
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BeeFrog.Iota.Api", "BeeFrog.Iota.Api\BeeFrog.Iota.Api.csproj", "{0492A4BD-7D88-4445-B21C-2BBC02D6F267}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BeeFrog.Iota.Api.Tests", "BeeFrog.Iota.Api.Tests\BeeFrog.Iota.Api.Tests.csproj", "{A1A37EAF-9604-42B9-9C3A-26CE1BB29EE6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{05D2436E-BEC0-4CA6-ABA9-8007291C1D45}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AddressCreation", "Examples\AddressCreation\AddressCreation.csproj", "{FF901DD8-83B5-4798-BFB2-607952FBB864}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SendZeroValueTransaction", "Examples\SendZeroValueTransaction\SendZeroValueTransaction.csproj", "{1AE0A0C6-7A65-412F-85DF-5553E5B4B53C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiMessageTransaction", "Examples\MultiMessageTransaction\MultiMessageTransaction.csproj", "{5F47A8CF-08D0-4AFF-A418-02B6FE6DFEF3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0492A4BD-7D88-4445-B21C-2BBC02D6F267}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0492A4BD-7D88-4445-B21C-2BBC02D6F267}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0492A4BD-7D88-4445-B21C-2BBC02D6F267}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0492A4BD-7D88-4445-B21C-2BBC02D6F267}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1A37EAF-9604-42B9-9C3A-26CE1BB29EE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1A37EAF-9604-42B9-9C3A-26CE1BB29EE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1A37EAF-9604-42B9-9C3A-26CE1BB29EE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1A37EAF-9604-42B9-9C3A-26CE1BB29EE6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF901DD8-83B5-4798-BFB2-607952FBB864}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF901DD8-83B5-4798-BFB2-607952FBB864}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF901DD8-83B5-4798-BFB2-607952FBB864}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF901DD8-83B5-4798-BFB2-607952FBB864}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1AE0A0C6-7A65-412F-85DF-5553E5B4B53C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1AE0A0C6-7A65-412F-85DF-5553E5B4B53C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1AE0A0C6-7A65-412F-85DF-5553E5B4B53C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1AE0A0C6-7A65-412F-85DF-5553E5B4B53C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F47A8CF-08D0-4AFF-A418-02B6FE6DFEF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F47A8CF-08D0-4AFF-A418-02B6FE6DFEF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F47A8CF-08D0-4AFF-A418-02B6FE6DFEF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F47A8CF-08D0-4AFF-A418-02B6FE6DFEF3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FF901DD8-83B5-4798-BFB2-607952FBB864} = {05D2436E-BEC0-4CA6-ABA9-8007291C1D45}
+		{1AE0A0C6-7A65-412F-85DF-5553E5B4B53C} = {05D2436E-BEC0-4CA6-ABA9-8007291C1D45}
+		{5F47A8CF-08D0-4AFF-A418-02B6FE6DFEF3} = {05D2436E-BEC0-4CA6-ABA9-8007291C1D45}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BB501703-EBB1-49DF-899D-D91E743AFC98}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.1</TargetFramework>
+    <Authors>BeeFrog</Authors>
+    <Company></Company>
+    <Description>The IOTA API library for .NET Standard framework. Compatible with .net 4.5 and .net core 1.0</Description>
+    <RepositoryUrl>https://github.com/BeeFrog/BeeFrog.Iota.Api</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>iota wallet c#</PackageTags>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/BeeFrog/BeeFrog.Iota.Api</PackageProjectUrl>
+    <Version>1.0.0</Version>
+    <PackageReleaseNotes>Local POW, Transaction signing, IOTA API support for IRI V1.4.1</PackageReleaseNotes>
+    <AssemblyName>BeeFrog.Iota.Api</AssemblyName>
+    <RootNamespace>BeeFrog.Iota.Api</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netstandard1.4\Borlay.Iota.Library.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Utils\Curl.cs" />
+    <Compile Remove="Utils\ICurl.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Crypto\Sha3\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Diagnostics.TraceSource">
+      <HintPath>..\..\..\..\..\Program Files\dotnet\sdk\NuGetFallbackFolder\microsoft.netcore.app\2.0.0\ref\netcoreapp2.0\System.Diagnostics.TraceSource.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Requests">
+      <HintPath>..\..\..\..\..\Program Files\dotnet\sdk\NuGetFallbackFolder\microsoft.netcore.app\2.0.0\ref\netcoreapp2.0\System.Net.Requests.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
