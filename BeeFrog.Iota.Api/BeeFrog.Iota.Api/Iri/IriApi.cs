@@ -188,6 +188,20 @@ namespace BeeFrog.Iota.Api.Iri
             return response.RemovedNeighbors;
         }
 
+        /// <summary>
+        /// Checks if any of the addresses have been used before to send Iota.        
+        /// </summary>
+        /// <param name="addresses">the address (without checksum) to check.</param>
+        /// <returns>An array of booleans in the same order as the addresses. True means the address has been used to send Iota.</returns>
+        public async Task<bool[]> WereAddressesSpentFrom(params string[] addresses)
+        {
+            var request = new WereAddressesSpentFromRequest(addresses);
+            var response = await genericClient.RequestAsync<WereAddressesSpentFromResponse>(request);
+            if (response == null)
+                throw new NullReferenceException(nameof(response));
+
+            return response.States;
+        }
 
         async Task<string[]> INonceSeeker.SearchNonce(string[] trytes, string trunkTransaction, string branchTransaction, CancellationToken cancellationToken)
         {

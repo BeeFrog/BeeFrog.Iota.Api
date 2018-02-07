@@ -78,5 +78,11 @@ namespace BeeFrog.Iota.Api.Iri
         /// Stores transactions
         /// </summary>
         public const string StoreTransactions = "storeTransactions";
+
+        /// <summary>
+        /// Check if a list of addresses was ever spent from, in the current epoch, or in previous epochs.
+        /// </summary>
+        public const string WereAddressesSpentFrom = "wereAddressesSpentFrom";
+        
     }
 }
