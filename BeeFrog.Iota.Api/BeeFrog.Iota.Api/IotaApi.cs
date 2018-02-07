@@ -433,6 +433,34 @@ namespace BeeFrog.Iota.Api
         }
 
         /// <summary>
+        /// Promotes the transaction by creating a new zero sum transaction and linking to it as the trunk.
+        /// It will get a tip to for the branch.
+        /// </summary>
+        /// <param name="transactionHash">The has of the transaction to promote</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns></returns>
+        public async Task<TransactionItem> PromoteTransaction(string transactionHash, CancellationToken cancellationToken)
+        {
+            var tipsTask = this.IriApi.GetTransactionsToApprove(this.Depth);
+
+            var transaction = new TransactionItem(new string('9', 81), 0, "BEEFROG9PROMOTE");
+            transaction.TrunkTransaction = transactionHash;
+
+            var tips = await tipsTask;
+            transaction.BranchTransaction = tips.BranchTransaction;
+            transaction.FinalizeBundleHash();
+            var trytes = new string[] { };
+
+            var trytesToSend = (await NonceSeeker
+                        .SearchNonce(new string[] { transaction.ToTransactionTrytes() }, transactionHash, tips.TrunkTransaction, cancellationToken))
+                        .Single();
+            await IriApi.BroadcastTransactions(trytesToSend);
+            await IriApi.StoreTransactions(trytesToSend);
+
+            return new TransactionItem(trytesToSend);
+        }
+
+        /// <summary>
         /// Approve transactions, do pow, broadcast and store trytes to tangle
         /// </summary>
         /// <param name="transactionTrytes"></param>

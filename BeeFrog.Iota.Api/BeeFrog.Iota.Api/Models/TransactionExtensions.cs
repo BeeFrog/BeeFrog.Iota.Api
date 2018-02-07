@@ -9,6 +9,27 @@ namespace BeeFrog.Iota.Api.Models
 {
     public static class TransactionExtensions
     {
+        /// <summary>
+        /// Calculates and sets the bundle has when there is only a single transaction in the bundle.
+        /// </summary>
+        /// <param name="transactionItems">The transaction item to bundle.</param>
+        /// <returns>The bundle hash.</returns>
+        public static string FinalizeBundleHash(this TransactionItem transactionItem)
+        {
+            return FinalizeBundleHash(new[] { transactionItem }, new Kerl());
+        }
+
+        /// <summary>
+        /// Calculates the bundle hash for all transactions and sets the Bundle hash on each transaction.
+        /// Index will also be set here too.
+        /// </summary>
+        /// <param name="transactionItems">The transaction items to bundle.</param>
+        /// <returns>The bundle hash.</returns>
+        public static string FinalizeBundleHash(this IEnumerable<TransactionItem> transactionItems)
+        {
+            return FinalizeBundleHash(transactionItems, new Kerl());
+        }
+
         public static string FinalizeBundleHash(this IEnumerable<TransactionItem> transactionItems, ICurl customCurl)
         {
             customCurl.Reset();
@@ -43,8 +64,6 @@ namespace BeeFrog.Iota.Api.Models
                         found = true;
                         var obsoleteTagTrits = Converter.ToTritsString(transactionItems.First().ObsoleteTag);
                         Converter.Increment(obsoleteTagTrits, 81);
-                        
-                        // TODO: Decide if this needs to be done as it may corrupt bundles.
                         transactionItems.First().ObsoleteTag = Converter.ToTrytes(obsoleteTagTrits);
                         customCurl.Reset();
                     }
