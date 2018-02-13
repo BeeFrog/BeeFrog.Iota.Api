@@ -7,13 +7,15 @@
     <Description>The IOTA API library for .NET Standard framework. Compatible with .net 4.5 and .net core 1.0</Description>
     <RepositoryUrl>https://github.com/BeeFrog/BeeFrog.Iota.Api</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>iota wallet c#</PackageTags>
+    <PackageTags>iota api c#</PackageTags>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/BeeFrog/BeeFrog.Iota.Api</PackageProjectUrl>
-    <Version>1.0.0</Version>
-    <PackageReleaseNotes>Local POW, Transaction signing, IOTA API support for IRI V1.4.1</PackageReleaseNotes>
+    <Version>1.0.1</Version>
+    <PackageReleaseNotes>IOTA API. Supports IRI V1.4.2.1 and IOTA API version 1.3.0. Local POW, Transaction signing.</PackageReleaseNotes>
     <AssemblyName>BeeFrog.Iota.Api</AssemblyName>
     <RootNamespace>BeeFrog.Iota.Api</RootNamespace>
+    <AssemblyVersion>1.0.0.1</AssemblyVersion>
+    <FileVersion>1.0.0.1</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

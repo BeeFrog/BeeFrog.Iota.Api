@@ -20,11 +20,11 @@
             var api = new IotaApi(bestNodeUrl);
             
             Console.WriteLine($"Creating transfer now. This may take a few seconds.");
-            var transferItem = new TransferItem() { Address = "FAKEADDRESS9999999999999999999999999999999999999999999999999999999999999999999999", Message = "TESTMESSAGE" };
+            var transferItem = new TransferItem() { Address = "FAKEADDRESS9999999999999999999999999999999999999999999999999999999999999999999999", Message = "PROMOTE9TEST" };
             var transaction = api.AttachTransfer(transferItem, CancellationToken.None).Result;
             var hash = transaction[0].Hash;
-            Console.WriteLine($"Your transaction hash is: {hash}");            
-            
+            Console.WriteLine($"Your transaction hash is: {hash}");
+
             Promote(api, hash);
 
             Console.WriteLine($"All done.");
@@ -36,8 +36,8 @@
         {
             while (true)
             {
-                Console.WriteLine("Waiting 10 seconds before promoting. Press any key to stop.");
-                for (int i = 0; i < 40; i++)
+                Console.WriteLine("Waiting 60 seconds before promoting. Press any key to stop.");
+                for (int i = 0; i < 240; i++)
                 {
                     if (i % 4 == 0) { Console.Write("."); }
 
@@ -49,9 +49,36 @@
                     }
                 }
 
+                var states = api.IriApi.GetInclusionStates(new[] { hash }).Result;
+                if(states.Any() && states[0])
+                {
+                    Console.WriteLine("Your transaction has been confirmed!");
+                    return;
+                }
+
+                var ok = api.IriApi.CheckConsistency(hash, hash).Result;
+                if (!ok)
+                {
+                    Console.WriteLine("Your transaction needs to be re-attached!");
+
+                    var result = api.GetTransactionItems(hash).Result;
+                    Console.WriteLine("Re-attaching!");
+                    var newTran = api.AttachTransactions(result, CancellationToken.None).Result;
+                    hash = newTran[0].Hash;
+                    continue;
+                }
+
                 Console.WriteLine(" Promoting.");
-                var tran = api.PromoteTransaction(hash, CancellationToken.None).Result;
-                Console.WriteLine(tran.Hash);
+                try
+                {
+                    var tran = api.PromoteTransaction(hash, CancellationToken.None).Result;
+                    Console.WriteLine(tran.Hash);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Promotion failed!");
+                    Console.WriteLine(ex.Message);
+                }
             }
         }
     }

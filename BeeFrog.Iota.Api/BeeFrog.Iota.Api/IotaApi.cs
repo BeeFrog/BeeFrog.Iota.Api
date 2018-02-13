@@ -13,6 +13,9 @@ using System.Threading.Tasks;
 
 namespace BeeFrog.Iota.Api
 {
+    /// <summary>
+    /// An abstraction layer over the IriApi which simplifies creating transactions and attaching them to the tangle.
+    /// </summary>
     public class IotaApi
     {
         /// <summary>
@@ -447,13 +450,14 @@ namespace BeeFrog.Iota.Api
             transaction.TrunkTransaction = transactionHash;
 
             var tips = await tipsTask;
-            transaction.BranchTransaction = tips.BranchTransaction;
+            transaction.BranchTransaction = tips.TrunkTransaction;
             transaction.FinalizeBundleHash();
             var trytes = new string[] { };
 
             var trytesToSend = (await NonceSeeker
                         .SearchNonce(new string[] { transaction.ToTransactionTrytes() }, transactionHash, tips.TrunkTransaction, cancellationToken))
                         .Single();
+            
             await IriApi.BroadcastTransactions(trytesToSend);
             await IriApi.StoreTransactions(trytesToSend);
 
