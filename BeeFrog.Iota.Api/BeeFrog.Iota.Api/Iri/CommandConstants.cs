@@ -80,6 +80,11 @@ namespace BeeFrog.Iota.Api.Iri
         public const string StoreTransactions = "storeTransactions";
 
         /// <summary>
+        /// Checks the consistency of the transaction to see if's been attached to a transaction which has been re-attached of is a double spend.
+        /// </summary>
+        public const string CheckConsistency = "checkConsistency";
+
+        /// <summary>
         /// Check if a list of addresses was ever spent from, in the current epoch, or in previous epochs.
         /// </summary>
         public const string WereAddressesSpentFrom = "wereAddressesSpentFrom";

@@ -189,6 +189,22 @@ namespace BeeFrog.Iota.Api.Iri
         }
 
         /// <summary>
+        /// Checks the transaction hashes are attached to a valid transactions which will be confirmed.
+        /// If you have attached to a double spend transaction of a transaction which has been re-attached it will be classed as inconsistent.
+        /// </summary>
+        /// <param name="hashes">The transaction hashes to check.</param>
+        /// <returns>An array of booleans in the same order as the hashes</returns>
+        public async Task<bool> CheckConsistency(params string[] hashes)
+        {
+            var request = new CheckConsistencyRequest(hashes);
+            var response = await genericClient.RequestAsync<CheckConsistencyResponse>(request);
+            if (response == null)
+                throw new NullReferenceException(nameof(response));
+
+            return response.State;
+        }
+
+        /// <summary>
         /// Checks if any of the addresses have been used before to send Iota.        
         /// </summary>
         /// <param name="addresses">the address (without checksum) to check.</param>
