@@ -6,22 +6,14 @@ For now this library is not working. IOTA changed encryption (Curl) and theses c
 
 ## Introduction
 
-The Borlay.Iota.Library implements [[IOTA IRI api calls]](https://github.com/iotaledger/wiki/blob/master/api-proposal.md).
+The BeeFrog.Iota.API implements [[IOTA IRI api calls]](https://github.com/iotaledger/wiki/blob/master/api-proposal.md).
 It also can do the proof of work for you.
+Currently support 1.3.0 of the API spec and working successfully with IRI 1.4.1
 
 http://iota.org
 https://github.com/iotaledger
 
-### Warning
-This library is not fully functional yet. Please only use to create zero value messages.
 
-Points to be aware of: 
-	Bundle finalizing will likely fail.
-	Transaction signing is untested at the moment.
-	Not all the unit tests are updated yet.
-	Code is not production ready and needs polishing.
-	TimeStamps will likely fail Daylight saving tests.	
-	
 ### Donate
 
 ```iota
@@ -29,24 +21,22 @@ PJGEZFOH99UVRUTRNWPZIYHHKWBMQKG9BHCMJGOZWWSPEWLTJYOHEFSJFQJHDBVOXLHMJATJIALSXELY
 ```
 
 ### TODO
-	Polish code.
-	Replace exceptions from API with a result object.
-	Remove strings for values. i.e. transaction value is a long.
-	Fix and test transaction signing + bundling.
-	Make the code DRY
-	Align the code more with SOLID principles.
+	Code Tidy up and restructure.
+	Replace exceptions from API calls with a result object + return any errors.
+	Add GPU Proof of Work. (This may take some time, + may find end up in a separate library.)
 
 ### Technologies
 
-The Borlay.Iota.Library is writen for [.NET Standard 1.1](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) framework. It can be used in .net 4.5 and .net core 1.0 as well. For full .net frameworks support visit [.NET Standard 1.1](https://docs.microsoft.com/en-us/dotnet/standard/net-standard)
+The BeeFrog.Iota.API is written for [.NET Standard 1.1](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) framework. It can be used in .net 4.5 and .net core 1.0 as well. For full .net frameworks support visit [.NET Standard 1.1](https://docs.microsoft.com/en-us/dotnet/standard/net-standard)
+Thanks to Borlay who create the base for which this API is built upon.
 
 
 ### Nuget
 
 ```PowerShell
-Install-Package Borlay.Iota.Library
+Install-Package BeeFrog.Iota.API
 ```
-[Borlay.Iota.Library nuget](https://www.nuget.org/packages/Borlay.Iota.Library/)
+[BeeFrog.Iota.API nuget](https://www.nuget.org/packages/BeeFrog.Iota.API/)
 
 ### Getting started
 
