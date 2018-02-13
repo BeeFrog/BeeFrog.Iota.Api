@@ -1,14 +1,8 @@
-
-# Attention
-
-For now this library is not working. IOTA changed encryption (Curl) and theses changes in this library are not implemented yet.
-
-
 ## Introduction
 
 The BeeFrog.Iota.API implements [[IOTA IRI api calls]](https://github.com/iotaledger/wiki/blob/master/api-proposal.md).
 It also can do the proof of work for you.
-Currently support 1.3.0 of the API spec and working successfully with IRI 1.4.1
+Currently supporting 1.3.0 of the API spec and working successfully with IRI 1.4.2.1
 
 http://iota.org
 https://github.com/iotaledger
@@ -23,7 +17,7 @@ PJGEZFOH99UVRUTRNWPZIYHHKWBMQKG9BHCMJGOZWWSPEWLTJYOHEFSJFQJHDBVOXLHMJATJIALSXELY
 ### TODO
 	Code Tidy up and restructure.
 	Replace exceptions from API calls with a result object + return any errors.
-	Add GPU Proof of Work. (This may take some time, + may find end up in a separate library.)
+	Add GPU Proof of Work. (This may take some time and may find end up in a separate library.)
 
 ### Technologies
 
@@ -98,3 +92,11 @@ var trytesToSend = await transactionTrytes
                 .DoPow(trunk, branch, 15, 0, CancellationToken.None); // do the pow
 await api.BroadcastAndStore(trytesToSend); // broadcast and send the trytes
 ```
+
+### More examples
+Working examples can be found in the Examples folder. 
+These include:
+* Address Creation
+* Sending a zero  value transaction.
+* Sending multiple transactions in a bundle.
+* Transaction promotion / re-attachment.
