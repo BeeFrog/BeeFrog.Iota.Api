@@ -15,9 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SendZeroValueTransaction", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MultiMessageTransaction", "Examples\MultiMessageTransaction\MultiMessageTransaction.csproj", "{5F47A8CF-08D0-4AFF-A418-02B6FE6DFEF3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckAnAddressHasBeenUsed", "CheckAnAddressHAsBeenUsed\CheckAnAddressHasBeenUsed.csproj", "{86972A55-92B7-4847-98E5-BFBBA3FF9CAD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckAnAddressHasBeenUsed", "Examples\CheckAnAddressHAsBeenUsed\CheckAnAddressHasBeenUsed.csproj", "{86972A55-92B7-4847-98E5-BFBBA3FF9CAD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreateAndPromoteATransaction", "CreateAndPromoteATransaction\CreateAndPromoteATransaction.csproj", "{9DD0E843-55F1-442D-BAD5-7E440CD8032E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreateAndPromoteATransaction", "Examples\CreateAndPromoteATransaction\CreateAndPromoteATransaction.csproj", "{9DD0E843-55F1-442D-BAD5-7E440CD8032E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
