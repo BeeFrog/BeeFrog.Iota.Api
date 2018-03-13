@@ -37,6 +37,12 @@ namespace BeeFrog.Iota.Api.NodeLookup
             }
         }
 
+        public async Task<string> GetBestNode()
+        {
+            var nodes = await this.FindNodes();
+            return nodes.FirstOrDefault()?.Url;
+        }
+
         private void CacheResults(string jsonResults)
         {
             //TODO.
