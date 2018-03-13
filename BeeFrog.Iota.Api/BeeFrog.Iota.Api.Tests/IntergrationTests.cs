@@ -33,7 +33,7 @@ namespace BeeFrog.Iota.Api.Tests
 
             var api = new IotaApi("https://nodes.thetangle.org:443");
             var bundle = api.GetBundleTransactionItems("XX9TDOEWQGKQNJTZPFAJJLOREYICWGHIIZEQFFFBACSYTKQJBPJVNJTHRAUKQT9AEWVGXACCVZFJICPJW").Result;
-            var tran = bundle[0];
+            var tran = bundle.Result[0];
             Assert.AreEqual(trytes, tran.RawTrytes);
         }
 
@@ -42,7 +42,7 @@ namespace BeeFrog.Iota.Api.Tests
         {
             var api = new IotaApi("https://nodes.thetangle.org:443");
             var bundle = api.GetBundleTransactionItems("NLAVEPNFGLLJXER9VKTTBQSHTXZGBLNH9ILHB9TXH9YEGGETCQAWIYPKKWSAODFORD9TWJHPHLNYHWIQX").Result;
-            foreach (var tran in bundle)
+            foreach (var tran in bundle.Result)
             {
                 var rTrytes = tran.RawTrytes;
                 var x = tran.ToString();

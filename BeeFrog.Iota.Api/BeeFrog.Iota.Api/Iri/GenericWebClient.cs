@@ -45,13 +45,16 @@ namespace BeeFrog.Iota.Api.Iri
             this.RequestErrorHandler = new RequestErrorHandler();
         }
 
+        public async Task<APIResult<TResponse>> RequestAsync<TResponse>(object request) where TResponse : new()
+        {
+            return await this.RequestAsync<TResponse>(request, CancellationToken.None);
+        }
+
         /// <summary>
         /// Requests the specified request asynchronously
         /// </summary>
-        /// <typeparam name="TRequest">The type of the request.</typeparam>
         /// <typeparam name="TResponse">The type of the response.</typeparam>
-        /// <param name="request">The request.</param>
-        public async Task<TResponse> RequestAsync<TResponse>(object request, CancellationToken cancellationToken) where TResponse : new()
+        public async Task<APIResult<TResponse>> RequestAsync<TResponse>(object request, CancellationToken cancellationToken) where TResponse : new()
         {
             string stringData = request.ToJson();
             Log?.Invoke($"Request: {stringData}");
@@ -64,24 +67,26 @@ namespace BeeFrog.Iota.Api.Iri
                 {
                     var content = new StringContent(stringData, System.Text.Encoding.UTF8, "application/json");
                     var response = await RequestContentAsync<TResponse>(content, cancellationToken);
-                    return response;
+                    return new APIResult<TResponse>(response);
                 }
-                catch(OperationCanceledException)
+                catch(OperationCanceledException oex)
                 {
-                    throw;
+                    return new APIResult<TResponse>(oex, "Operation Cancelled");
                 }
                 catch(Exception e)
                 {
                     lastException = e;
                     var handled = await RequestErrorHandler?.HandleError(request, e, i + 1, cancellationToken);
-                    if (!handled)
-                        throw;
 
-                    cancellationToken.ThrowIfCancellationRequested();
+                    
+                    if(cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
                 }
             }
 
-            throw new IotaException($"Max retry count reached whith message '{lastException?.Message}'", lastException);
+            return new APIResult<TResponse>(lastException, $"Max retry count reached with message '{lastException?.Message}'");
         }
 
         private async Task<TResponse> RequestContentAsync<TResponse>(HttpContent content, CancellationToken cancellationToken) where TResponse : new()

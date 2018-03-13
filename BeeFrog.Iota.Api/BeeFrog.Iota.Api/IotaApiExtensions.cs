@@ -1,4 +1,5 @@
 ﻿using BeeFrog.Iota.Api.Exceptions;
+using BeeFrog.Iota.Api.Iri;
 using BeeFrog.Iota.Api.Models;
 using BeeFrog.Iota.Api.Utils;
 using System;
@@ -21,11 +22,12 @@ namespace BeeFrog.Iota.Api
         /// <param name="startFromIndex">Index to start search for address</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns></returns>
-        public static async Task<TransactionItem[]> AttachTransfer(this IotaApi api, TransferItem transferItem, string seed, int startFromIndex, CancellationToken cancellationToken)
+        public static async Task<APIResult<TransactionItem[]>> AttachTransfer(this IotaApi api, TransferItem transferItem, string seed, int startFromIndex, CancellationToken cancellationToken)
         {
             var transactionItemsToSend = await api.CreateTransactions(transferItem, seed, startFromIndex, cancellationToken);
             var transactionItems = await api.AttachTransactions(transactionItemsToSend, cancellationToken);
-            return transactionItems;
+
+            return transactionItems.Successful ? transactionItems : transactionItems.RePackage(r => new TransactionItem[0]);
         }
 
         /// <summary>
@@ -35,7 +37,7 @@ namespace BeeFrog.Iota.Api
         /// <param name="transferItem">Transfer item</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns></returns>
-        public static Task<TransactionItem[]> AttachTransfer(this IotaApi api, TransferItem transferItem, CancellationToken cancellationToken)
+        public static Task<APIResult<TransactionItem[]>> AttachTransfer(this IotaApi api, TransferItem transferItem, CancellationToken cancellationToken)
         {
             var transactionItems = transferItem.CreateTransactions();
             return api.AttachTransactions(transactionItems, cancellationToken);

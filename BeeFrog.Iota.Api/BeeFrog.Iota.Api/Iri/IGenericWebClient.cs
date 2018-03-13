@@ -17,11 +17,21 @@ namespace BeeFrog.Iota.Api.Iri
         string Url { get; }
 
         /// <summary>
-        /// Requests the specified request asynchronously
+        /// Requests the specified request asynchronously.
         /// </summary>
-        /// <typeparam name="TRequest">The type of the request.</typeparam>
-        /// <param name="request">The request.</param>
-        Task<TResponse> RequestAsync<TResponse>(object request, CancellationToken cancellationToken)
+        /// <typeparam name="TResponse">The response type you are expecting.</typeparam>
+        /// <param name="request">The request object.</param>
+        /// <returns>Wrapped API result with the success object or failure reason.</returns>
+        Task<APIResult<TResponse>> RequestAsync<TResponse>(object request, CancellationToken cancellationToken)
+            where TResponse : new();
+
+        /// <summary>
+        /// Requests the specified request asynchronously.
+        /// </summary>
+        /// <typeparam name="TResponse">The response type you are expecting.</typeparam>
+        /// <param name="request">The request object.</param>
+        /// <returns>Wrapped API result with the success object or failure reason.</returns>
+        Task<APIResult<TResponse>> RequestAsync<TResponse>(object request)
             where TResponse : new();
     }
 }

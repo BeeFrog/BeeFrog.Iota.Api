@@ -11,35 +11,32 @@ namespace BeeFrog.Iota.Api.Iri
 {
     public static class IriApiExtensions
     {
-        /// <summary>
-        /// Requests the specified request asynchronously
-        /// </summary>
-        /// <typeparam name="TResponse">The type of the response.</typeparam>
-        /// <param name="request">The request.</param>
-        public static Task<TResponse> RequestAsync<TResponse>(this IGenericWebClient client, object request)
-            where TResponse : new()
-        {
-            return client.RequestAsync<TResponse>(request, CancellationToken.None);
-        }
-
-        public static async Task<string[]> FindTransactionsFromAddresses(this IriApi api, params string[] addresses)
+        public static async Task<APIResult<string[]>> FindTransactionsFromAddresses(this IriApi api, params string[] addresses)
         {
             var transactionTrytes = await api.FindTransactions(addresses, null, null, null);
             return transactionTrytes;
         }
 
-        public static async Task<TransactionItem[]> FindTransactionItemsFromAddresses(this IriApi api,
-            params string[] addresses)
+        public static async Task<APIResult<TransactionItem[]>> FindTransactionItemsFromAddresses(this IriApi api, params string[] addresses)
         {
             var transactionHashes = await api.FindTransactionsFromAddresses(addresses);
-            return await api.FindTransactionItemsFromHashes(transactionHashes);
+            if (transactionHashes.Successful)
+            {
+                return await api.FindTransactionItemsFromHashes(transactionHashes.Result);
+            }
+            return transactionHashes.RePackage(r => new TransactionItem[0]);
         }
 
-        public static async Task<TransactionItem[]> FindTransactionItemsFromHashes(this IriApi api,
-            params string[] hashes)
+        public static async Task<APIResult<TransactionItem[]>> FindTransactionItemsFromHashes(this IriApi api, params string[] hashes)
         {
             var transactionTrytes = await api.GetTrytes(hashes);
-            return transactionTrytes.Select(t => new TransactionItem(t)).ToArray();
+            if (transactionTrytes.Successful)
+            {
+                var trans = transactionTrytes.Result.Select(t => new TransactionItem(t)).ToArray();
+                return new APIResult<TransactionItem[]>(trans);
+            }
+
+            return transactionTrytes.RePackage(r => new TransactionItem[0]);
         }
 
         /// <summary>
@@ -53,13 +50,16 @@ namespace BeeFrog.Iota.Api.Iri
             if (addressItems.Length == 0) return;
             var addresses = addressItems.Select(a => a.Address).ToArray();
             var balances = await api.GetBalances(addresses);
-            for (int i = 0; i < addressItems.Length; i++)
+            if (balances.Successful)
             {
-                addressItems[i].Balance = balances[i];
+                for (int i = 0; i < addressItems.Length; i++)
+                {
+                    addressItems[i].Balance = balances.Result[i];
+                }
             }
         }
 
-        public static Task<long[]> GetBalances(this IriApi api, params string[] addresses)
+        public static Task<APIResult<long[]>> GetBalances(this IriApi api, params string[] addresses)
         {
             return api.GetBalances(addresses, 100);
         }

@@ -35,9 +35,17 @@
 
             // Now we can send them.
             var api = new IotaApi(node.Url);
-            var transaction = api.AttachTransactions(trans, CancellationToken.None).Result;
+            var apiResult = api.AttachTransactions(trans, CancellationToken.None).Result;
 
-            Console.WriteLine($"Your transaction bundle is: {transaction[0].Bundle}");
+            if (apiResult.Successful)
+            {
+                var transaction = apiResult.Result;
+                Console.WriteLine($"Your transaction bundle is: {transaction[0].Bundle}");
+            }
+            else
+            {
+                Console.WriteLine($"{apiResult.ErrorMessage} Exception: {apiResult.ExceptionInfo}");
+            }
 
             Console.WriteLine($"Press any key to close");
             Console.ReadKey();

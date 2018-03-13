@@ -14,18 +14,25 @@
         {
             Console.WriteLine("Finding an IOTA node");
             INodeFinder nodeFinder = new IotaDanceNodeFinder();
-            var nodes = nodeFinder.FindNodes().Result;
-            var bestNodeUrl = nodes.ElementAt(1).Url;
+            var node = nodeFinder.GetBestNode().Result;
+            var api = new IotaApi(node);
+            Console.WriteLine("Found node: " + node);
 
-            var api = new IotaApi(bestNodeUrl);
-            
             Console.WriteLine($"Creating transfer now. This may take a few seconds.");
             var transferItem = new TransferItem() { Address = "FAKEADDRESS9999999999999999999999999999999999999999999999999999999999999999999999", Message = "PROMOTE9TEST" };
-            var transaction = api.AttachTransfer(transferItem, CancellationToken.None).Result;
-            var hash = transaction[0].Hash;
-            Console.WriteLine($"Your transaction hash is: {hash}");
+            var response = api.AttachTransfer(transferItem, CancellationToken.None).Result;
+            if (response.Successful)
+            {
+                var transaction = response.Result;
+                var hash = transaction[0].Hash;
+                Console.WriteLine($"Your transaction hash is: {hash}");
 
-            Promote(api, hash);
+                Promote(api, hash);
+            }
+            else
+            {
+                Console.WriteLine($"Error Create Transaction: {response.ErrorMessage} Exception: {response.ExceptionInfo}");
+            }
 
             Console.WriteLine($"All done.");
             Console.WriteLine($"Press any key to close");
@@ -50,34 +57,54 @@
                 }
 
                 var states = api.IriApi.GetInclusionStates(new[] { hash }).Result;
-                if(states.Any() && states[0])
+                if(states.Successful && states.Result.Any() && states.Result[0])
                 {
                     Console.WriteLine("Your transaction has been confirmed!");
                     return;
                 }
 
-                var ok = api.IriApi.CheckConsistency(hash, hash).Result;
-                if (!ok)
+                var consistencyResponse = api.IriApi.CheckConsistency(hash, hash).Result;
+                if (consistencyResponse.Successful)
                 {
-                    Console.WriteLine("Your transaction needs to be re-attached!");
+                    if (consistencyResponse.Result == false)
+                    {
+                        Console.WriteLine("Your transaction needs to be re-attached!");
+                        var response = api.GetTransactionItems(hash).Result;
+                        if (response.Successful)
+                        {
+                            Console.WriteLine("Re-attaching!");
+                            var reattachResponse = api.AttachTransactions(response.Result, CancellationToken.None).Result;
+                            if (reattachResponse.Successful)
+                            {
+                                hash = reattachResponse.Result[0].Hash;
+                                Console.WriteLine("Success! Your new hash is:" + hash);
+                                continue;
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Re-attach Failed! Reason: {reattachResponse.ErrorMessage} Exception:{reattachResponse.ExceptionInfo}");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Get Transaction Failed! Reason: {response.ErrorMessage} Exception:{response.ExceptionInfo}");
+                        }
+                    }
 
-                    var result = api.GetTransactionItems(hash).Result;
-                    Console.WriteLine("Re-attaching!");
-                    var newTran = api.AttachTransactions(result, CancellationToken.None).Result;
-                    hash = newTran[0].Hash;
-                    continue;
+                    Console.WriteLine(" Promoting.");
+                    var promoteResponse = api.PromoteTransaction(hash, CancellationToken.None).Result;
+                    if (promoteResponse.Successful)
+                    {
+                        Console.WriteLine(promoteResponse.Result.Hash);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Promotion failed!! Reason: {promoteResponse.ErrorMessage} Exception:{promoteResponse.ExceptionInfo}");
+                    }
                 }
-
-                Console.WriteLine(" Promoting.");
-                try
+                else
                 {
-                    var tran = api.PromoteTransaction(hash, CancellationToken.None).Result;
-                    Console.WriteLine(tran.Hash);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Promotion failed!");
-                    Console.WriteLine(ex.Message);
+                    Console.WriteLine($"CheckConsistency failed! Reason: {consistencyResponse.ErrorMessage} Exception:{consistencyResponse.ExceptionInfo}");
                 }
             }
         }

@@ -12,7 +12,7 @@ namespace BeeFrog.Iota.Api.Iri
 {
     public class IriApi : INonceSeeker
     {
-        private readonly IGenericWebClient genericClient;
+        private readonly IGenericWebClient genericWebClient;
 
         /// <summary>
         /// Gets or sets the MinWeightMagnitude. Default is 15
@@ -27,165 +27,146 @@ namespace BeeFrog.Iota.Api.Iri
         /// <summary>
         /// Gets the WebClient
         /// </summary>
-        public IGenericWebClient WebClient => genericClient;
+        public IGenericWebClient WebClient => genericWebClient;
 
-        public IriApi(string url)
-            : this(new GenericWebClient(url))
+        public IriApi(string url) : this(new GenericWebClient(url))
         {
         }
 
-        public IriApi(IGenericWebClient genericClient)
-        {
-            if (genericClient == null)
-                throw new ArgumentNullException(nameof(genericClient));
+        public IriApi(IGenericWebClient genericClient2)
+        {            
+            this.genericWebClient = genericClient2 ?? throw new ArgumentNullException(nameof(genericClient2));
 
-            this.genericClient = genericClient;
             this.MinWeightMagnitude = 15;
             this.TransactionApproveDepth = 9;
         }
 
-        public async Task<string[]> AttachToTangle(string[] trytes, CancellationToken cancellationToken)
+        public async Task<APIResult<string[]>> AttachToTangle(string[] trytes, CancellationToken cancellationToken)
         {
             var transactionsToApprove = await GetTransactionsToApprove(TransactionApproveDepth);
-            return await AttachToTangle(trytes,
-                transactionsToApprove.TrunkTransaction, transactionsToApprove.BranchTransaction, 
-                cancellationToken);
+            if (transactionsToApprove.Successful)
+            {
+                var result = await AttachToTangle(trytes,
+                    transactionsToApprove.Result.TrunkTransaction, 
+                    transactionsToApprove.Result.BranchTransaction,
+                    cancellationToken);
+
+                return result;
+            }
+            else
+            {
+                return transactionsToApprove.RePackage(r => new string[0]);
+            }
         }
 
-        public async Task<string[]> AttachToTangle(string[] trytes, 
+        public async Task<APIResult<string[]>> AttachToTangle(string[] trytes,
             string trunkTransaction, string branchTransaction, CancellationToken cancellationToken)
         {
             InputValidator.CheckIfArrayOfTrytes(trytes);
 
-            AttachToTangleRequest attachToTangleRequest = new AttachToTangleRequest(
-                trunkTransaction, branchTransaction,
-                trytes, MinWeightMagnitude);
-            var response = await genericClient.RequestAsync<AttachToTangleResponse>(attachToTangleRequest, cancellationToken);
-            if (response == null)
-                throw new NullReferenceException(nameof(response));
+            AttachToTangleRequest attachToTangleRequest = new AttachToTangleRequest(trunkTransaction, branchTransaction, trytes, MinWeightMagnitude);
 
-            return response.Trytes;
+            var response = await genericWebClient.RequestAsync<AttachToTangleResponse>(attachToTangleRequest, cancellationToken);
+
+            return response?.RePackage(r => r.Trytes) ?? new APIResult<string[]>(null, "Null response from API");
         }
 
         public async Task BroadcastTransactions(params string[] trytes)
         {
-            await genericClient.RequestAsync<BroadcastTransactionsResponse>(
-                    new BroadcastTransactionsRequest(trytes));
+            await genericWebClient.RequestAsync<BroadcastTransactionsResponse>(new BroadcastTransactionsRequest(trytes));
         }
 
-        public async Task<string[]> FindTransactions(IEnumerable<string> addresses, IEnumerable<string> tags,
+        public async Task<APIResult<string[]>> FindTransactions(IEnumerable<string> addresses, IEnumerable<string> tags,
             IEnumerable<string> approves, IEnumerable<string> bundles)
         {
-            FindTransactionsRequest findTransactionsRequest = 
+            FindTransactionsRequest findTransactionsRequest =
                 new FindTransactionsRequest(bundles?.ToArray(), addresses?.ToArray(), tags?.ToArray(), approves?.ToArray());
 
-            var response = await genericClient.RequestAsync<FindTransactionsResponse>(findTransactionsRequest);
-            if (response == null)
-                throw new NullReferenceException(nameof(response));
+            var response = await genericWebClient.RequestAsync<FindTransactionsResponse>(findTransactionsRequest);
 
-            return response.Hashes;
+            return response?.RePackage(r => r.Hashes);
         }
 
-        public async Task<long[]> GetBalances(IEnumerable<string> addresses, long threshold)
+        public async Task<APIResult<long[]>> GetBalances(IEnumerable<string> addresses, long threshold)
         {
-            GetBalancesRequest getBalancesRequest = new GetBalancesRequest(addresses.ToArray(), threshold);
-            var response = await genericClient.RequestAsync<GetBalancesResponse>(getBalancesRequest);
-            if (response == null)
-                throw new NullReferenceException(nameof(response));
+            GetBalancesRequest getBalancesRequest = new GetBalancesRequest(addresses.ToArray(), threshold);            
+            var response = await genericWebClient.RequestAsync<GetBalancesResponse>(getBalancesRequest);
 
-            return response.Balances;
+            return response?.RePackage(r => r.Balances);
         }
 
-        public async Task<bool[]> GetInclusionStates(IEnumerable<string> transactions, params string[] milestones)
+        public async Task<APIResult<bool[]>> GetInclusionStates(IEnumerable<string> transactions, params string[] milestones)
         {
-            var response = await genericClient.RequestAsync<GetInclusionStatesResponse>(
-                    new GetInclusionStatesRequest(transactions.ToArray(), milestones));
-            if (response == null)
-                throw new NullReferenceException(nameof(response));
+            var response = await genericWebClient.RequestAsync<GetInclusionStatesResponse>(new GetInclusionStatesRequest(transactions.ToArray(), milestones));
 
-            return response.States;
+            return response?.RePackage(r => r.States);
         }
 
         public async Task StoreTransactions(params string[] trytes)
         {
-            var response = await genericClient.RequestAsync<StoreTransactionsResponse>(
-                    new StoreTransactionsRequest(trytes));
+            var response = await genericWebClient.RequestAsync<StoreTransactionsResponse>(new StoreTransactionsRequest(trytes));
         }
 
-        public async Task<GetNodeInfoResponse> GetNodeInfo()
+        public async Task<APIResult<GetNodeInfoResponse>> GetNodeInfo()
         {
-            var response = await genericClient.RequestAsync<GetNodeInfoResponse>(new GetNodeInfoRequest());
-            if (response == null)
-                throw new NullReferenceException(nameof(response));
-
+            var response = await genericWebClient.RequestAsync<GetNodeInfoResponse>(new GetNodeInfoRequest());            
             return response;
         }
 
-        public async Task<string[]> GetTips()
+        public async Task<APIResult<string[]>> GetTips()
         {
             GetTipsRequest getTipsRequest = new GetTipsRequest();
-            var response = await genericClient.RequestAsync<GetTipsResponse>(getTipsRequest);
-            if (response == null)
-                throw new NullReferenceException(nameof(response));
+            var response = await genericWebClient.RequestAsync<GetTipsResponse>(getTipsRequest);
 
-            return response.Hashes;
+            return response?.RePackage(r => r.Hashes);
         }
 
-        public async Task<IApproveTransactions> GetTransactionsToApprove(int depth)
+        public async Task<APIResult<IApproveTransactions>> GetTransactionsToApprove(int depth)
         {
             GetTransactionsToApproveRequest getTransactionsToApproveRequest = new GetTransactionsToApproveRequest(depth);
-            var response = await genericClient.RequestAsync<GetTransactionsToApproveResponse>(
-                    getTransactionsToApproveRequest);
-            if (response == null)
-                throw new NullReferenceException(nameof(response));
+            var response = await genericWebClient.RequestAsync<GetTransactionsToApproveResponse>(getTransactionsToApproveRequest, CancellationToken.None);
 
-            return response;
+            var result = response ?? this.NullResponse<GetTransactionsToApproveResponse>();
+            return result.RePackage(r => r as IApproveTransactions);
         }
 
-        public async Task<string[]> GetTrytes(params string[] hashes)
+        public async Task<APIResult<string[]>> GetTrytes(params string[] hashes)
         {
             GetTrytesRequest getTrytesRequest = new GetTrytesRequest() { Hashes = hashes };
-            var response = await genericClient.RequestAsync<GetTrytesResponse>(getTrytesRequest);
-            if (response == null)
-                throw new NullReferenceException(nameof(response));
+            var response = await genericWebClient.RequestAsync<GetTrytesResponse>(getTrytesRequest);
 
-            return response.Trytes;
+            return response?.RePackage(r => r.Trytes);
         }
 
-        public async Task InterruptAttachingToTangle()
+        public async Task<bool> InterruptAttachingToTangle()
         {
             InterruptAttachingToTangleRequest request = new InterruptAttachingToTangleRequest();
-            var response = await genericClient.RequestAsync<InterruptAttachingToTangleResponse>(request);
+            var response = await genericWebClient.RequestAsync<InterruptAttachingToTangleResponse>(request);
+
+            return response?.Successful == true;
         }
 
-        public async Task<Neighbor[]> GetNeighbors()
+        public async Task<APIResult<Neighbor[]>> GetNeighbors()
         {
             GetNeighborsRequest getNeighborsRequest = new GetNeighborsRequest();
-            var response = await genericClient.RequestAsync<GetNeighborsResponse>(getNeighborsRequest);
-            if (response == null)
-                throw new NullReferenceException(nameof(response));
+            var response = await genericWebClient.RequestAsync<GetNeighborsResponse>(getNeighborsRequest);
 
-            return response.Neighbors;
+            return response?.RePackage(r => r.Neighbors);
         }
 
-        public async Task<long> AddNeighbors(params string[] uris)
+        public async Task<APIResult<long>> AddNeighbors(params string[] uris)
         {
-            var response = await genericClient.RequestAsync<AddNeighborsResponse>(
-                    new AddNeighborsRequest(uris));
-            if (response == null)
-                throw new NullReferenceException(nameof(response));
+            var response = await genericWebClient.RequestAsync<AddNeighborsResponse>(new AddNeighborsRequest(uris));
 
-            return response.AddedNeighbors;
+            return response?.RePackage(r => r.AddedNeighbors);
         }
 
-        public async Task<long> RemoveNeighbors(params string[] uris)
+        public async Task<APIResult<long>> RemoveNeighbors(params string[] uris)
         {
             RemoveNeighborsRequest removeNeighborsRequest = new RemoveNeighborsRequest(uris);
-            var response = await genericClient.RequestAsync<RemoveNeighborsResponse>(removeNeighborsRequest);
-            if (response == null)
-                throw new NullReferenceException(nameof(response));
+            var response = await genericWebClient.RequestAsync<RemoveNeighborsResponse>(removeNeighborsRequest);
 
-            return response.RemovedNeighbors;
+            return response?.RePackage(r => r.RemovedNeighbors);
         }
 
         /// <summary>
@@ -194,35 +175,36 @@ namespace BeeFrog.Iota.Api.Iri
         /// </summary>
         /// <param name="hashes">The transaction hashes to check.</param>
         /// <returns>An array of booleans in the same order as the hashes</returns>
-        public async Task<bool> CheckConsistency(params string[] hashes)
+        public async Task<APIResult<bool>> CheckConsistency(params string[] hashes)
         {
             var request = new CheckConsistencyRequest(hashes);
-            var response = await genericClient.RequestAsync<CheckConsistencyResponse>(request);
-            if (response == null)
-                throw new NullReferenceException(nameof(response));
-
-            return response.State;
+            var response = await genericWebClient.RequestAsync<CheckConsistencyResponse>(request);
+            
+            return response?.RePackage(r => r.State);
         }
 
         /// <summary>
         /// Checks if any of the addresses have been used before to send Iota.        
         /// </summary>
         /// <param name="addresses">the address (without checksum) to check.</param>
-        /// <returns>An array of booleans in the same order as the addresses. True means the address has been used to send Iota.</returns>
-        public async Task<bool[]> WereAddressesSpentFrom(params string[] addresses)
+        /// <returns>An array of boolean in the same order as the addresses. True means the address has been used to send Iota.</returns>
+        public async Task<APIResult<bool[]>> WereAddressesSpentFrom(params string[] addresses)
         {
             var request = new WereAddressesSpentFromRequest(addresses);
-            var response = await genericClient.RequestAsync<WereAddressesSpentFromResponse>(request);
-            if (response == null)
-                throw new NullReferenceException(nameof(response));
+            var response = await genericWebClient.RequestAsync<WereAddressesSpentFromResponse>(request);
 
-            return response.States;
+            return response?.RePackage(r => r.States)?? this.NullResponse<bool[]>();
         }
 
         async Task<string[]> INonceSeeker.SearchNonce(string[] trytes, string trunkTransaction, string branchTransaction, CancellationToken cancellationToken)
         {
-            return await AttachToTangle(trytes, trunkTransaction, branchTransaction, cancellationToken);
+            var result = await AttachToTangle(trytes, trunkTransaction, branchTransaction, cancellationToken);
+            return result?.Result;
         }
 
+        private APIResult<T> NullResponse<T>()
+        {
+            return new APIResult<T>(null, "Null response from API");
+        }
     }
 }

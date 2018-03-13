@@ -58,6 +58,11 @@ namespace BeeFrog.Iota.Api
         private void RaiseAPIAction(string message) => APIAction?.Invoke(this, message);
 
         /// <summary>
+        /// Empty transaction Fun array
+        /// </summary>
+        TransactionItem[] emptyTrans = new TransactionItem[0];
+
+        /// <summary>
         /// Gets the Url
         /// </summary>
         public string Url => iriApi.WebClient.Url;
@@ -168,11 +173,14 @@ namespace BeeFrog.Iota.Api
         public async Task RenewTransactions(AddressItem addressItem)
         {
             var transactionHashes = await iriApi.FindTransactionsFromAddresses(addressItem.Address);
-            foreach (var hash in transactionHashes)
+            if (transactionHashes.Successful)
             {
-                if (!addressItem.Transactions.Any(t => t.Hash == hash))
+                foreach (var hash in transactionHashes.Result)
                 {
-                    addressItem.Transactions.Add(new TransactionHash() { Hash = hash });
+                    if (!addressItem.Transactions.Any(t => t.Hash == hash))
+                    {
+                        addressItem.Transactions.Add(new TransactionHash() { Hash = hash });
+                    }
                 }
             }
         }
@@ -182,31 +190,44 @@ namespace BeeFrog.Iota.Api
         /// </summary>
         /// <param name="transactionHashes">The transactions hashes</param>
         /// <returns></returns>
-        public async Task<TransactionItem[]> GetTransactionItems(params string[] transactionHashes)
+        public async Task<APIResult<TransactionItem[]>> GetTransactionItems(params string[] transactionHashes)
         {
             var transactionTrytes = await iriApi.GetTrytes(transactionHashes);
-            var nodeInfo = await iriApi.GetNodeInfo();
-            var states = await iriApi.GetInclusionStates(transactionHashes, nodeInfo.LatestSolidSubtangleMilestone);
+            if (!transactionTrytes.Successful) return transactionTrytes.RePackage(r => new TransactionItem[0]);
 
-            var transactionItems = transactionTrytes.Select(t => new TransactionItem(t)).ToArray();
+            var nodeInfo = await iriApi.GetNodeInfo();
+            if (!nodeInfo.Successful) return nodeInfo.RePackage(r => new TransactionItem[0]);
+
+            var states = await iriApi.GetInclusionStates(transactionHashes, nodeInfo.Result.LatestSolidSubtangleMilestone);
+            if (!states.Successful) return states.RePackage(r => new TransactionItem[0]);
+
+            var transactionItems = transactionTrytes.Result.Select(t => new TransactionItem(t)).ToArray();
 
             for (int i = 0; i < transactionItems.Length; i++)
             {
-                transactionItems[i].Persistence = states[i];
+                transactionItems[i].Persistence = states.Result[i];
             }
 
-            return transactionItems;
+            return new APIResult<TransactionItem[]>(transactionItems);
         }
+
         /// <summary>
         /// Gets transactions details and inclusion states by bundle hash
         /// </summary>
         /// <param name="bundleHash"></param>
         /// <returns></returns>
-        public async Task<TransactionItem[]> GetBundleTransactionItems(string bundleHash)
+        public async Task<APIResult<TransactionItem[]>> GetBundleTransactionItems(string bundleHash)
         {
             var transactionHashes = await iriApi.FindTransactions(null, null, null, new string[] { bundleHash });
-            var transactionItems = await GetTransactionItems(transactionHashes);
-            return transactionItems;
+            if (transactionHashes.Successful)
+            {
+                var transactionItems = await GetTransactionItems(transactionHashes.Result);
+                return transactionItems;
+            }
+            else
+            {
+                return transactionHashes.RePackage(r => new TransactionItem[0]);
+            }
         }
 
         /// <summary>
@@ -330,7 +351,7 @@ namespace BeeFrog.Iota.Api
         /// <param name="remainderAddress">The remainder where remaind amount is send</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <returns></returns>
-        public async Task<TransactionItem[]> AttachTransfer(TransferItem transferItem, IEnumerable<AddressItem> addressItems, string remainderAddress, CancellationToken cancellationToken)
+        public async Task<APIResult<TransactionItem[]>> AttachTransfer(TransferItem transferItem, IEnumerable<AddressItem> addressItems, string remainderAddress, CancellationToken cancellationToken)
         {
             await RenewBalances(addressItems.ToArray());
             return await AttachTransferWithoutRenewBalance(transferItem, addressItems, remainderAddress, cancellationToken);
@@ -344,7 +365,7 @@ namespace BeeFrog.Iota.Api
         /// <param name="remainderAddress">The remainder where remaind amount is send</param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <returns></returns>
-        public async Task<TransactionItem[]> AttachTransferWithoutRenewBalance(TransferItem transferItem, IEnumerable<AddressItem> addressItems, string remainderAddress, CancellationToken cancellationToken)
+        public async Task<APIResult<TransactionItem[]>> AttachTransferWithoutRenewBalance(TransferItem transferItem, IEnumerable<AddressItem> addressItems, string remainderAddress, CancellationToken cancellationToken)
         {
             var transactionItems = transferItem.CreateTransactions(remainderAddress, addressItems.ToArray());
             var resultTransactionItems = await AttachTransactions(transactionItems, cancellationToken);
@@ -357,12 +378,19 @@ namespace BeeFrog.Iota.Api
         /// <param name="transactions">Transactions to send</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns></returns>
-        public async Task<TransactionItem[]> AttachTransactions(IEnumerable<TransactionItem> transactions, CancellationToken cancellationToken)
+        public async Task<APIResult<TransactionItem[]>> AttachTransactions(IEnumerable<TransactionItem> transactions, CancellationToken cancellationToken)
         {
             var transactionTrytes = transactions.GetTrytes();
             var trytes = await AttachTrytes(transactionTrytes, cancellationToken);
-            var transactionResult = trytes.Select(t => new TransactionItem(t)).ToArray();
-            return transactionResult;
+
+            if (trytes.Successful)
+            {
+                var transactionResult = trytes.Result.Select(t => new TransactionItem(t)).ToArray();
+                return new APIResult<TransactionItem[]>(transactionResult);
+            }
+            
+            // Faulted state.
+            return trytes.RePackage(r => this.emptyTrans);
         }
 
         /// <summary>
@@ -411,7 +439,7 @@ namespace BeeFrog.Iota.Api
                     cts.CancelAfter(RebroadcastMaximumPowTime);
 
                     var trunk = trytes.GetTrunkTransaction();
-                    var branch = toApprove.TrunkTransaction;
+                    var branch = toApprove.Result.TrunkTransaction;
 
                     var trytesToSend = (await NonceSeeker
                         .SearchNonce(new string[] { trytes }, trunk, branch, cts.Token))
@@ -442,7 +470,7 @@ namespace BeeFrog.Iota.Api
         /// <param name="transactionHash">The has of the transaction to promote</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns></returns>
-        public async Task<TransactionItem> PromoteTransaction(string transactionHash, CancellationToken cancellationToken)
+        public async Task<APIResult<TransactionItem>> PromoteTransaction(string transactionHash, CancellationToken cancellationToken)
         {
             var tipsTask = this.IriApi.GetTransactionsToApprove(this.Depth);
 
@@ -450,18 +478,20 @@ namespace BeeFrog.Iota.Api
             transaction.TrunkTransaction = transactionHash;
 
             var tips = await tipsTask;
-            transaction.BranchTransaction = tips.TrunkTransaction;
+            if (!tips.Successful) return tips.RePackage<TransactionItem>(r => null);
+
+            transaction.BranchTransaction = tips.Result.TrunkTransaction;
             transaction.FinalizeBundleHash();
             var trytes = new string[] { };
 
             var trytesToSend = (await NonceSeeker
-                        .SearchNonce(new string[] { transaction.ToTransactionTrytes() }, transactionHash, tips.TrunkTransaction, cancellationToken))
+                        .SearchNonce(new string[] { transaction.ToTransactionTrytes() }, transactionHash, tips.Result.TrunkTransaction, cancellationToken))
                         .Single();
             
             await IriApi.BroadcastTransactions(trytesToSend);
             await IriApi.StoreTransactions(trytesToSend);
 
-            return new TransactionItem(trytesToSend);
+            return new APIResult<TransactionItem>(new TransactionItem(trytesToSend));
         }
 
         /// <summary>
@@ -470,7 +500,7 @@ namespace BeeFrog.Iota.Api
         /// <param name="transactionTrytes"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public virtual async Task<string[]> AttachTrytes(string[] transactionTrytes, CancellationToken cancellationToken)
+        public virtual async Task<APIResult<string[]>> AttachTrytes(string[] transactionTrytes, CancellationToken cancellationToken)
         {
             if (transactionTrytes == null)
                 throw new ArgumentNullException(nameof(transactionTrytes));
@@ -484,8 +514,13 @@ namespace BeeFrog.Iota.Api
             RaiseAPIAction("Getting Transactions");
             var toApprove = await IriApi.GetTransactionsToApprove(Depth);
 
-            var trunk = toApprove.TrunkTransaction;
-            var branch = toApprove.BranchTransaction;
+            if (!toApprove.Successful)
+            {
+                return toApprove.RePackage(r => new string[0]);
+            }
+
+            var trunk = toApprove.Result.TrunkTransaction;
+            var branch = toApprove.Result.BranchTransaction;
 
             RaiseAPIAction("Performing POW");
             var trytesToSend = await NonceSeeker.SearchNonce(transactionTrytes, trunk, branch, cancellationToken);
@@ -494,7 +529,7 @@ namespace BeeFrog.Iota.Api
             await BroadcastAndStore(trytesToSend);
 
             RaiseAPIAction("Transaction Sent.");
-            return trytesToSend;
+            return new APIResult<string[]>(trytesToSend);
         }
 
         /// <summary>

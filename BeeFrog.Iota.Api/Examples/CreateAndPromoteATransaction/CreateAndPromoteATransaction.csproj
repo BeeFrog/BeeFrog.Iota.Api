@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BeeFrog.Iota.Api\BeeFrog.Iota.Api.csproj" />
+    <ProjectReference Include="..\..\BeeFrog.Iota.Api\BeeFrog.Iota.Api.csproj" />
   </ItemGroup>
 
 </Project>

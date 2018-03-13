@@ -29,6 +29,13 @@ namespace BeeFrog.Iota.Api.Utils
             this.curl = curl ?? this.GetICurlObject();
         }
 
+        public string GenerateAddress(string seed, int index, int secutiry = 2)
+        {
+            var key = this.Key(Converter.ToTrits(seed), index, secutiry);
+            var address = this.Address(this.Digests(key));            
+            return Converter.ToTrytes(address);
+        }
+
         /**
          * @param inSeed
          * @param index

@@ -17,9 +17,17 @@ namespace CheckAnAddressHAsBeenUsed
 
             var response = api.IriApi.WereAddressesSpentFrom(addresses).Result;
 
-            for (int i = 0; i < addresses.Length; i++)
+            if (response.Successful)
             {
-                Console.WriteLine($"Address {addresses[i]} used={response[i]}");
+                var data = response.Result;
+                for (int i = 0; i < addresses.Length; i++)
+                {
+                    Console.WriteLine($"Address {addresses[i]} used={data[i]}");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"{response.ErrorMessage} Exception: {response.ExceptionInfo}");
             }
 
             Console.WriteLine($"Press any key to close");

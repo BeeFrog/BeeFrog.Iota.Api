@@ -70,6 +70,30 @@ namespace BeeFrog.Iota.Api.Tests
         }
 
         [TestMethod]
+        public void GenerateMultipleAddresses()
+        {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var signing = new Signing(new Crypto.Kerl());
+            for (int i = 0; i < 10; i++)
+            {
+                signing.GenerateAddress(ADDR_SEED, i);
+                //IotaUtils.GenerateAddress(ADDR_SEED, i);
+            }
+            Console.WriteLine(stopwatch.Elapsed);
+        }
+
+        [TestMethod]
+        public void GenerateMultipleAddressesInParrell()
+        {
+            var signing = new Signing(new Crypto.Kerl());
+            System.Threading.Tasks.Parallel.For(0, 99, (i) =>
+              {                  
+                  signing.GenerateAddress(ADDR_SEED, i);
+                  // IotaUtils.GenerateAddress(ADDR_SEED, i);
+              });
+        }
+
+        [TestMethod]
         public void GerateAddressesWithChecksum()
         {
             Assert.AreEqual(FIRST_ADDR, IotaUtils.GenerateAddress(TEST_SEED, 0, 2).AddressWithCheckSum);

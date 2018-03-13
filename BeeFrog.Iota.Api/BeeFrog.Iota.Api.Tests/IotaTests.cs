@@ -25,9 +25,8 @@ namespace BeeFrog.Iota.Api.Tests
         public void CheckAddressBalance()
         {
             var api = CreateIotaClient();
-            var balances = api.IriApi
-                .GetBalances(new string[] 
-                { "ZDRSNW9BNHPRRKVIHPHSOHMSESQUJMK9SXWSWOVGNXKCFXAWXNWGZPFOHZEWHQVSBJJVJMAEZOGCOOGF9" }, 100).Result;
+            var balances = api.IriApi.GetBalances(new string[] 
+                    { "ZDRSNW9BNHPRRKVIHPHSOHMSESQUJMK9SXWSWOVGNXKCFXAWXNWGZPFOHZEWHQVSBJJVJMAEZOGCOOGF9" }, 100).Result.Result;
 
             Assert.IsNotNull(balances);
             Assert.AreEqual(1, balances.Length);
@@ -91,7 +90,8 @@ namespace BeeFrog.Iota.Api.Tests
             var trytes = new string[] { outtx };
             var trytesResult = await api.IriApi.AttachToTangle(trytes, trunk, branch, CancellationToken.None);
 
-            Assert.AreEqual(outtx, trytesResult.First());
+            Assert.IsTrue(trytesResult.Successful);
+            Assert.AreEqual(outtx, trytesResult.Result?.First());
         }
 
         [TestMethod]
@@ -106,7 +106,7 @@ namespace BeeFrog.Iota.Api.Tests
             var trytes = new string[] { outtx };
             var trytesResult = await api.IriApi.AttachToTangle(trytes, trunk, branch, CancellationToken.None);
 
-            Assert.AreEqual(outtx, trytesResult.First());
+            Assert.AreEqual(outtx, trytesResult.Result?.First());
         }
 
 
@@ -183,7 +183,8 @@ namespace BeeFrog.Iota.Api.Tests
 
                     var transactions = transfer.CreateTransactions();
                     var trytesToPow = transactions.GetTrytes().Single();
-                    var toApprove = await api.IriApi.GetTransactionsToApprove(9);
+                    var toApproveResult = await api.IriApi.GetTransactionsToApprove(9);
+                    var toApprove = toApproveResult.Result;
                     var diver = new PowDiver();
                     cts.CancelAfter(15000); //
                     var trytesToSend = await diver.DoPow(trytesToPow.SetApproveTransactions(toApprove.TrunkTransaction, toApprove.BranchTransaction), 15, cts.Token);
@@ -225,7 +226,8 @@ namespace BeeFrog.Iota.Api.Tests
 
                     var transactions = transfer.CreateTransactions();
                     var trytesToPow = transactions.GetTrytes().Single();
-                    var toApprove = await api.IriApi.GetTransactionsToApprove(9);
+                    var toApproveResult = await api.IriApi.GetTransactionsToApprove(9);
+                    var toApprove = toApproveResult.Result;
                     var diver = new PowDiver();
                     //cts.CancelAfter(15000); 
                     var trunk = toApprove.TrunkTransaction;
@@ -307,7 +309,9 @@ namespace BeeFrog.Iota.Api.Tests
 
                     var transactions = transfer.CreateTransactions();
                     var trytesToPow = transactions.GetTrytes().Single();
-                    var toApprove = await api.IriApi.GetTransactionsToApprove(9);
+                    var toApproveResult = await api.IriApi.GetTransactionsToApprove(9);
+                    var toApprove = toApproveResult.Result;
+
                     var diver = new PowDiver();
                     cts.CancelAfter(20000);
                     var trunk = toApprove.TrunkTransaction;
@@ -350,7 +354,8 @@ namespace BeeFrog.Iota.Api.Tests
                     CancellationTokenSource cts = new CancellationTokenSource();
                     cancellationToken.Register(() => cts.Cancel());
 
-                    var toApprove = await api.IriApi.GetTransactionsToApprove(9);
+                    var toApproveResult = await api.IriApi.GetTransactionsToApprove(9);
+                    var toApprove = toApproveResult.Result;
                     var diver = new PowDiver();
                     cts.CancelAfter(15000);
 
@@ -421,7 +426,8 @@ namespace BeeFrog.Iota.Api.Tests
 
                     var transactionItems = transfer.CreateTransactions(addresses[2].Address, addresses.First());
                     var transactionTrytes = transactionItems.GetTrytes();
-                    var toApprove = await api.IriApi.GetTransactionsToApprove(9);
+                    var toApproveResult = await api.IriApi.GetTransactionsToApprove(9);
+                    var toApprove = toApproveResult.Result;
 
                     var trunk = toApprove.TrunkTransaction;
                     var branch = toApprove.BranchTransaction;

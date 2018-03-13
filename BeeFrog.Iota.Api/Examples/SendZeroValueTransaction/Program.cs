@@ -23,8 +23,18 @@
             var transferItem = new TransferItem() { Address = "FAKEADDRESS9999999999999999999999999999999999999999999999999999999999999999999999", Message = "TESTMESSAGE" };
             var api = new IotaApi(bestNodeUrl);
 
-            var transaction = api.AttachTransfer(transferItem, CancellationToken.None).Result;
-            Console.WriteLine($"Your transaction hash is: {transaction[0].Hash}");
+
+            var apiResult = api.AttachTransfer(transferItem, CancellationToken.None).Result;
+
+            if (apiResult.Successful)
+            {
+                var transactions = apiResult.Result;
+                Console.WriteLine($"Your transaction hash is: {transactions[0].Hash}");
+            }
+            else
+            {
+                Console.WriteLine($"{apiResult.ErrorMessage} Exception: {apiResult.ExceptionInfo}");
+            }
 
             Console.WriteLine($"Press any key to close");
             Console.ReadKey();
